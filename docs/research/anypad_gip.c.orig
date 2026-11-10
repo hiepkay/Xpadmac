@@ -1,0 +1,399 @@
+#include "gip.h"
+#include "log.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#define T_HELLO_WAIT   1000     /* ms without a Hello before bringing the pad up blind */
+#define T_HINT        10000     /* ms waiting for a Hello before the hint */
+#define T_UP           2000     /* ms after a bring-up without status or input: again */
+#define BURSTS            3     /* bring-ups tried before giving up (the pad stays read) */
+#define T_REANNOUNCE    500     /* ms between two bring-ups for a pad that announces again */
+#define T_KEEPALIVE   20000
+#define T_RUMBLE         10     /* ms between two rumble frames: some firmwares choke on more */
+#define LOG_ACKS         20     /* acknowledgements logged, then only counted */
+#define LOG_INPUTS        5
+#define LOG_OTHER        50
+#define TRIGGER_PRESS  0x20
+
+/* ---- small things ------------------------------------------------------------ */
+
+static uint8_t next_seq(uint8_t *c)
+{
+    if (++*c == 0) ++*c;        /* 0 is reserved */
+    return *c;
+}
+
+static void hex(char *out, size_t max, const uint8_t *p, int n)
+{
+    size_t k = 0;
+    int i;
+
+    out[0] = '\0';
+    for (i = 0; i < n && k + 4 < max; i++) k += (size_t)snprintf(out + k, max - k, "%02x ", p[i]);
+    if (k) out[k - 1] = '\0';
+}
+
+const char *gip_state_name(int state)
+{
+    static const char *const names[] = { "wait-hello", "wait-up", "active", "silent" };
+
+    return state >= 0 && state <= GIP_SILENT ? names[state] : "?";
+}
+
+static void set_state(gip_t *g, int state, long now, const char *why)
+{
+    if (g->state == state) return;
+    log_line("gip %s +%ld %s -> %s (%s)", g->name, now - g->t_open, gip_state_name(g->state),
+             gip_state_name(state), why);
+    g->state = state;
+    g->t_state = now;
+}
+
+static int tx(gip_t *g, const char *what, const uint8_t *p, int len, long now, gip_send_fn send, void *ctx)
+{
+    char h[3 * 32 + 1];
+    int ok = send(ctx, p, len);
+
+    hex(h, sizeof h, p, len);
+    log_line("gip %s +%ld tx %s: %s -> %s", g->name, now - g->t_open, what, h, ok ? "ok" : "failed");
+    return ok;
+}
+
+/* ---- the vendors that need more ------------------------------------------------ */
+
+static int is(const gip_t *g, uint16_t vid, uint16_t pid) { return g->vid == vid && g->pid == pid; }
+
+/* GameSir receivers (and the 366c:0005) announce only once their controller
+ * is linked: the host waits for them however long it takes (xone; xpad's
+ * FLAG_DELAY_INIT). */
+static int waits_for_hello(const gip_t *g)
+{
+    return g->vid == 0x3537 || is(g, 0x366C, 0x0005);
+}
+
+/* PDP, PowerA and these others may never announce: brought up at once
+ * (SDL's legacy Xbox One driver). */
+static int never_hello(const gip_t *g)
+{
+    return g->vid == 0x0E6F || g->vid == 0x24C6 || g->vid == 0x20D6;
+}
+
+/* ---- bringing the pad up --------------------------------------------------------
+ *
+ * In xpad's and SDL's order, with the vendor packets from xpad's init list. */
+static void burst(gip_t *g, long now, gip_send_fn send, void *ctx, const char *why)
+{
+    uint8_t p[16];
+
+    log_line("gip %s +%ld bring-up %d (%s)", g->name, now - g->t_open, g->bursts + 1, why);
+    if (is(g, 0x0E6F, 0x0165) || is(g, 0x0F0D, 0x0067)) {          /* Hori: before START */
+        const uint8_t q[] = { 0x01, 0x20, next_seq(&g->seq_sys), 0x09, 0x00, 0x04, 0x20, 0x3A,
+                              0x00, 0x00, 0x00, 0x80, 0x00 };
+        tx(g, "hori", q, sizeof q, now, send, ctx);
+    }
+    p[0] = 0x05; p[1] = 0x20; p[2] = next_seq(&g->seq_sys); p[3] = 0x01; p[4] = 0x00;
+    tx(g, "start", p, 5, now, send, ctx);
+    if (is(g, 0x045E, 0x02EA) || is(g, 0x045E, 0x0B00)) {          /* Xbox One S, Elite 2 */
+        p[0] = 0x05; p[1] = 0x20; p[2] = next_seq(&g->seq_sys); p[3] = 0x0F; p[4] = 0x06;
+        tx(g, "s-init", p, 5, now, send, ctx);
+    }
+    if (is(g, 0x045E, 0x0B00)) {                                     /* Elite 2: extra input */
+        p[0] = 0x4D; p[1] = 0x10; p[2] = next_seq(&g->seq_vend); p[3] = 0x02; p[4] = 0x07; p[5] = 0x00;
+        tx(g, "extra-input", p, 6, now, send, ctx);
+    }
+    p[0] = 0x0A; p[1] = 0x20; p[2] = next_seq(&g->seq_sys); p[3] = 0x03; p[4] = 0x00; p[5] = 0x01; p[6] = 0x14;
+    tx(g, "led", p, 7, now, send, ctx);
+    p[0] = 0x06; p[1] = 0x20; p[2] = next_seq(&g->seq_sec); p[3] = 0x02; p[4] = 0x01; p[5] = 0x00;
+    tx(g, "security-complete", p, 6, now, send, ctx);
+    if (is(g, 0x24C6, 0x541A) || is(g, 0x24C6, 0x542A) || is(g, 0x24C6, 0x543A)) {   /* PowerA */
+        const uint8_t on[] = { 0x09, 0x00, next_seq(&g->seq_vend), 0x09, 0x00, 0x0F, 0x00, 0x00,
+                               0x1D, 0x1D, 0xFF, 0x00, 0x00 };
+        uint8_t off[] = { 0x09, 0x00, 0, 0x09, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        tx(g, "rumble-begin", on, sizeof on, now, send, ctx);
+        off[2] = next_seq(&g->seq_vend);
+        tx(g, "rumble-end", off, sizeof off, now, send, ctx);
+    }
+    {
+        /* "Required for some exotic gamepads to start input" (xone, SDL). */
+        const uint8_t stop[] = { 0x09, 0x00, next_seq(&g->seq_vend), 0x09, 0x00, 0x0F, 0x00, 0x00,
+                                 0x00, 0x00, 0xFF, 0x00, 0xEB };
+        tx(g, "rumble-stop", stop, sizeof stop, now, send, ctx);
+    }
+    g->bursts++;
+    g->t_burst = now;
+    set_state(g, GIP_WAIT_UP, now, "brought up");
+}
+
+/* ---- what the pad sends --------------------------------------------------------- */
+
+static uint8_t stick16(int16_t v) { return (uint8_t)(((int)v + 32768) >> 8); }
+static uint8_t stick16_inv(int16_t v) { return (uint8_t)((32767 - (int)v) >> 8); }
+static int16_t les16(const uint8_t *p) { return (int16_t)(p[0] | p[1] << 8); }
+
+/* Input 0x20, payload: [0] Menu View A B X Y in bits 2-7  [1] up down left
+ * right LB RB LS RS  [2..3] [4..5] triggers, 10 bits  [6..13] sticks. */
+static int input(const uint8_t *p, int n, pad_state *st)
+{
+    uint32_t b = 0;
+
+    if (n < 14) return 0;
+    if (p[0] & 0x04) b |= PAD_OPTIONS;      /* Menu */
+    if (p[0] & 0x08) b |= PAD_TOUCHPAD;     /* View */
+    if (p[0] & 0x10) b |= PAD_CROSS;
+    if (p[0] & 0x20) b |= PAD_CIRCLE;
+    if (p[0] & 0x40) b |= PAD_SQUARE;
+    if (p[0] & 0x80) b |= PAD_TRIANGLE;
+    if (p[1] & 0x01) b |= PAD_UP;
+    if (p[1] & 0x02) b |= PAD_DOWN;
+    if (p[1] & 0x04) b |= PAD_LEFT;
+    if (p[1] & 0x08) b |= PAD_RIGHT;
+    if (p[1] & 0x10) b |= PAD_L1;
+    if (p[1] & 0x20) b |= PAD_R1;
+    if (p[1] & 0x40) b |= PAD_L3;
+    if (p[1] & 0x80) b |= PAD_R3;
+    st->l2 = (uint8_t)(((p[2] | p[3] << 8) & 0x3FF) >> 2);
+    st->r2 = (uint8_t)(((p[4] | p[5] << 8) & 0x3FF) >> 2);
+    st->lx = stick16(les16(p + 6));
+    st->ly = stick16_inv(les16(p + 8));
+    st->rx = stick16(les16(p + 10));
+    st->ry = stick16_inv(les16(p + 12));
+    if (st->l2 > TRIGGER_PRESS) b |= PAD_L2;
+    if (st->r2 > TRIGGER_PRESS) b |= PAD_R2;
+    st->buttons = b | (st->buttons & PAD_PS);
+    return 1;
+}
+
+/* The acknowledgement: 01 20 SS 09 | 00 CC FF Rl Rh 00 00 Ml Mh, SS the
+ * frame's sequence number, CC its command, FF its system flag, R the bytes
+ * received so far and M those still to come (SDL, xone). */
+static void ack(gip_t *g, uint8_t cmd, uint8_t flags, uint8_t seq, long got, long left, long now,
+                gip_send_fn send, void *ctx)
+{
+    /* Addressed to whoever sent the frame: the pad (0), or a module on it. */
+    uint8_t a[13] = { 0x01, (uint8_t)(0x20 | (flags & 0x0F)), seq, 0x09, 0x00, cmd, (uint8_t)(flags & 0x20),
+                      (uint8_t)got, (uint8_t)(got >> 8), 0x00, 0x00, (uint8_t)left, (uint8_t)(left >> 8) };
+    int ok = send(ctx, a, sizeof a);
+
+    if (g->acks++ < LOG_ACKS)
+        log_line("gip %s +%ld ack cmd %02x seq %02x got %ld left %ld -> %s", g->name, now - g->t_open, cmd,
+                 seq, got, left, ok ? "ok" : "failed");
+}
+
+static void hello(gip_t *g, const uint8_t *p, int n, long now, pad_state *st, int *ret,
+                  gip_send_fn send, void *ctx)
+{
+    g->hellos++;
+    if (n >= 28)
+        log_line("gip %s +%ld hello %lu: %04x:%04x firmware %u.%u.%u.%u hardware %u.%u", g->name,
+                 now - g->t_open, g->hellos, p[8] | p[9] << 8, p[10] | p[11] << 8, p[12] | p[13] << 8,
+                 p[14] | p[15] << 8, p[16] | p[17] << 8, p[18] | p[19] << 8, p[20], p[21]);
+    switch (g->state) {
+    case GIP_WAIT_HELLO:
+    case GIP_SILENT:
+        g->bursts = 0;
+        burst(g, now, send, ctx, "hello");
+        break;
+    case GIP_WAIT_UP:                   /* announcing again: the bring-up did not take */
+        if (now - g->t_burst >= T_REANNOUNCE && g->bursts < BURSTS) burst(g, now, send, ctx, "hello again");
+        break;
+    case GIP_ACTIVE:                    /* it started over: nothing held, up again */
+        log_line("gip %s +%ld re-announce after %ld ms up", g->name, now - g->t_open, now - g->t_state);
+        pad_state_reset(st);
+        *ret |= GIP_RX_STATE;
+        g->bursts = 0;
+        burst(g, now, send, ctx, "re-announce");
+        break;
+    }
+}
+
+static void frame(gip_t *g, uint8_t cmd, uint8_t flags, uint8_t seq, const uint8_t *p, int n, long now,
+                  pad_state *st, int *ret, gip_send_fn send, void *ctx)
+{
+    char h[3 * 64 + 1];
+
+    switch (cmd) {
+    case 0x01:                          /* the pad acknowledges */
+        break;
+    case 0x02:
+        if (flags & 0x20) hello(g, p, n, now, st, ret, send, ctx);
+        break;
+    case 0x03:                          /* status: power and battery */
+        if (!(flags & 0x20)) break;
+        g->statuses++;
+        if (n >= 1 && (g->statuses == 1 || p[0] != g->status))
+            log_line("gip %s +%ld status %02x", g->name, now - g->t_open, p[0]);
+        if (n >= 1) g->status = p[0];
+        if (g->state == GIP_WAIT_UP) set_state(g, GIP_ACTIVE, now, "status");
+        break;
+    case 0x07:                          /* the Guide button: {down, 0x5B}; the Adaptive Controller says 2 */
+        if ((flags & 0x20) && n >= 1) {
+            st->buttons = (st->buttons & ~(uint32_t)PAD_PS) | (p[0] & 0x03 ? PAD_PS : 0);
+            *ret |= GIP_RX_STATE | GIP_RX_INPUT;
+            if (g->state == GIP_WAIT_UP) set_state(g, GIP_ACTIVE, now, "guide");
+        }
+        break;
+    case 0x20:
+        if (flags & 0x20) break;
+        if (input(p, n, st)) {
+            *ret |= GIP_RX_STATE | GIP_RX_INPUT;
+            if (g->inputs++ < LOG_INPUTS) {
+                hex(h, sizeof h, p, n < 64 ? n : 64);
+                log_line("gip %s +%ld input %lu: %s", g->name, now - g->t_open, g->inputs, h);
+            }
+            if (g->state != GIP_ACTIVE) set_state(g, GIP_ACTIVE, now, "input");
+        }
+        break;
+    default:                            /* metadata (04), security (06), the rest: shown */
+        if (g->other++ < LOG_OTHER) {
+            hex(h, sizeof h, p, n < 64 ? n : 64);
+            log_line("gip %s +%ld rx cmd %02x flags %02x seq %02x len %d: %s", g->name, now - g->t_open, cmd,
+                     flags, seq, n, h);
+        }
+        break;
+    }
+}
+
+static int varint(const uint8_t *b, int len, int *pos, long *v)
+{
+    int shift = 0;
+
+    *v = 0;
+    while (*pos < len && shift <= 21) {
+        uint8_t c = b[(*pos)++];
+        *v |= (long)(c & 0x7F) << shift;
+        if (!(c & 0x80)) return 1;
+        shift += 7;
+    }
+    return 0;
+}
+
+int gip_receive(gip_t *g, const uint8_t *buf, int len, long now, pad_state *st, gip_send_fn send, void *ctx)
+{
+    int off = 0, ret = 0;
+
+    g->t_rx = now;
+    while (len - off >= 4) {
+        const uint8_t *f = buf + off;
+        uint8_t cmd = f[0], flags = f[1], seq = f[2];
+        int pos = 3;
+        long plen, second = 0;
+
+        if (!varint(f, len - off, &pos, &plen) || ((flags & 0x80) && !varint(f, len - off, &pos, &second)) ||
+            plen > len - off - pos) {
+            char h[3 * 32 + 1];
+            hex(h, sizeof h, f, len - off < 32 ? len - off : 32);
+            log_line("gip %s +%ld rx frame cut short: %s", g->name, now - g->t_open, h);
+            break;
+        }
+        g->frames++;
+        if (flags & 0x80) {             /* chunked: the first chunk gives the total, the others the offset */
+            long got, left;
+            if (flags & 0x40) g->chunk_total = second;
+            got = (flags & 0x40 ? 0 : second) + plen;
+            left = g->chunk_total > got ? g->chunk_total - got : 0;
+            /* The last chunk is acknowledged even unasked (as xone's fork does). */
+            if ((flags & 0x10) || (plen == 0 && !(flags & 0x40)))
+                ack(g, cmd, flags, seq, got, left, now, send, ctx);
+        } else if (flags & 0x10) {
+            ack(g, cmd, flags, seq, plen, 0, now, send, ctx);
+        }
+        /* The low bits name a module on the pad (a headset or chatpad in its
+         * jack): acknowledged, but not the pad's own; its Hello must not be
+         * taken for the pad starting over (SDL skips them too). */
+        if (flags & 0x0F) {
+            if (g->modules++ < LOG_OTHER)
+                log_line("gip %s +%ld module %d: cmd %02x, left alone", g->name, now - g->t_open, flags & 0x0F, cmd);
+        } else {
+            frame(g, cmd, flags, seq, f + pos, (int)plen, now, st, &ret, send, ctx);
+        }
+        off += pos + (int)plen;
+    }
+    return ret;
+}
+
+/* ---- timers -------------------------------------------------------------------- */
+
+void gip_init(gip_t *g, const char *name, uint16_t vid, uint16_t pid, int opts, long now)
+{
+    memset(g, 0, sizeof *g);
+    g->name = name;
+    g->vid = vid;
+    g->pid = pid;
+    g->opts = opts;
+    g->state = GIP_WAIT_HELLO;
+    g->t_open = g->t_state = now;
+}
+
+void gip_tick(gip_t *g, long now, gip_send_fn send, void *ctx)
+{
+    if (!g->reads) return;              /* nothing is written before the first read */
+    switch (g->state) {
+    case GIP_WAIT_HELLO:
+        if ((g->opts & GIP_OPT_BLIND) || never_hello(g)) {
+            burst(g, now, send, ctx, "without a hello");
+        } else if (waits_for_hello(g)) {
+            if (!g->hint && now - g->t_open >= T_HINT) {
+                g->hint = 1;
+                log_line("gip %s +%ld no hello yet: press the controller's Xbox button", g->name, now - g->t_open);
+            }
+        } else if (now - g->t_open >= T_HELLO_WAIT) {
+            burst(g, now, send, ctx, "no hello in 1 s");
+        }
+        break;
+    case GIP_WAIT_UP:
+        if (now - g->t_burst < T_UP) break;
+        if (g->bursts < BURSTS) {
+            burst(g, now, send, ctx, "no status or input in 2 s");
+        } else {
+            set_state(g, GIP_SILENT, now, "no answer to 3 bring-ups");
+            log_line("gip %s: the pad does not come up; it is still read, and a hello brings it up again",
+                     g->name);
+        }
+        break;
+    case GIP_ACTIVE:
+        if ((g->opts & GIP_OPT_KEEPALIVE) && now - g->t_keep >= T_KEEPALIVE) {
+            uint8_t p[7];
+            g->t_keep = now;
+            p[0] = 0x05; p[1] = 0x20; p[2] = next_seq(&g->seq_sys); p[3] = 0x01; p[4] = 0x00;
+            tx(g, "keepalive start", p, 5, now, send, ctx);
+            p[0] = 0x0A; p[1] = 0x20; p[2] = next_seq(&g->seq_sys); p[3] = 0x03; p[4] = 0x00; p[5] = 0x01; p[6] = 0x14;
+            tx(g, "keepalive led", p, 7, now, send, ctx);
+            p[0] = 0x06; p[1] = 0x20; p[2] = next_seq(&g->seq_sec); p[3] = 0x02; p[4] = 0x01; p[5] = 0x00;
+            tx(g, "keepalive security", p, 6, now, send, ctx);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+int gip_up(const gip_t *g)
+{
+    return g->state == GIP_ACTIVE;
+}
+
+/* 09 00 SS 09 | 00 0F, trigger motors off, main motors 0..100, on 2.55 s,
+ * no delay, repeated 255 times: in effect until the next one. */
+int gip_rumble(gip_t *g, const pad_output *o, long now, uint8_t *b, int max)
+{
+    if (max < 13) return 0;
+    memset(b, 0, 13);
+    b[0] = 0x09;
+    b[2] = next_seq(&g->seq_vend);
+    b[3] = 0x09;
+    b[5] = 0x0F;
+    b[8] = (uint8_t)(o->strong * 100 / 255);
+    b[9] = (uint8_t)(o->weak * 100 / 255);
+    b[10] = 0xFF;
+    b[12] = 0xFF;
+    g->t_rumble = now;
+    return 13;
+}
+
+void gip_lost(const gip_t *g, long now)
+{
+    log_line("gip %s +%ld lost: %s, %lu hello, %lu status, %lu input, %d bring-up(s), last frame +%ld", g->name,
+             now - g->t_open, gip_state_name(g->state), g->hellos, g->statuses, g->inputs, g->bursts,
+             g->t_rx ? g->t_rx - g->t_open : -1);
+}

@@ -1,0 +1,31 @@
+/*
+ * XPadGIPAudio: the audio interface (number 1, FF/47/D0, alternate
+ * settings 0 and 1) of a GIP pad. It selects alternate setting 0 - a
+ * SET_INTERFACE(1, 0) request - and keeps the interface open until the pad
+ * goes, as Linux xone's wired transport does in xone_wired_init_audio_port
+ * ("disable the audio interface, mandatory for certain third party
+ * devices"). macOS sends no SET_INTERFACE for an interface nothing drives,
+ * and IOUSBHostDevice::DeviceRequest refuses a standard SET_INTERFACE
+ * (kIOReturnNotPermitted), so it takes a service on the interface itself.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+#ifndef XPadGIPAudio_h
+#define XPadGIPAudio_h
+
+#include <Availability.h>
+#include <DriverKit/IOService.iig>
+
+class XPadGIPAudio : public IOService
+{
+public:
+    virtual bool init() override;
+
+    virtual void free() override;
+
+    virtual kern_return_t Start(IOService *provider) override;
+
+    virtual kern_return_t Stop(IOService *provider) override;
+};
+
+#endif /* XPadGIPAudio_h */

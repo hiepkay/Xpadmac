@@ -1,0 +1,98 @@
+/*
+ * XPadGIPGamepad: the host side of GIP (the Xbox One / Series wired
+ * protocol) on a pad's interface 0 (FF/47/D0), published as an Xbox
+ * Wireless Controller (045E:0B13, Bluetooth LE descriptor).
+ *
+ * The protocol itself is Shared/gip.c: this class moves its bytes. Two
+ * interrupt-IN reads are always queued and are never cancelled or timed
+ * out while the pad is up (macOS clears the endpoint halt on a cancelled
+ * transfer, which upsets pads). Only a transfer that already failed, which
+ * leaves its endpoint halted anyway, is followed by ClearStall, at most a
+ * few times in a row. Frames for the pad go through a FIFO, one transfer
+ * in flight at a time; a 20 ms timer drives gip_tick. Input becomes
+ * report 1; rumble report 3 becomes a GIP rumble frame.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+#ifndef XPadGIPGamepad_h
+#define XPadGIPGamepad_h
+
+#include <Availability.h>
+#include <DriverKit/IOService.iig>
+#include <DriverKit/OSAction.iig>
+#include <DriverKit/IOTimerDispatchSource.iig>
+#include <USBDriverKit/IOUSBHostInterface.iig>
+#include <USBDriverKit/IOUSBHostPipe.iig>
+#include <HIDDriverKit/IOUserHIDDevice.iig>
+
+class XPadGIPGamepad : public IOUserHIDDevice
+{
+public:
+    virtual bool init() override;
+
+    virtual void free() override;
+
+    virtual kern_return_t Start(IOService *provider) override;
+
+    /* Cancels the timer, aborts the pipes, closes the interface. */
+    virtual kern_return_t Stop(IOService *provider) override;
+
+    /* Opens the interface, sets up the pipes, buffers and timer, starts the
+     * reads and the GIP state machine. */
+    virtual bool handleStart(IOService *provider) override;
+
+    virtual OSDictionary *newDeviceDescription() override;
+
+    virtual OSData *newReportDescriptor() override;
+
+    /* Xbox rumble report 3 -> GIP rumble frame. */
+    virtual kern_return_t setReport(IOMemoryDescriptor *report,
+                                    IOHIDReportType reportType,
+                                    IOOptionBits options,
+                                    uint32_t completionTimeout,
+                                    OSAction *action) override;
+
+    /* Input report 1 from the current state; nothing else exists. */
+    virtual kern_return_t getReport(IOMemoryDescriptor *report,
+                                    IOHIDReportType reportType,
+                                    IOOptionBits options,
+                                    uint32_t completionTimeout,
+                                    OSAction *action) override;
+
+    /* gip_send_fn: queues one frame for the OUT endpoint; 1 if queued. */
+    int sendFrame(const uint8_t *frame, int length) LOCALONLY;
+
+protected:
+    virtual void ReadComplete(OSAction *action TARGET,
+                              IOReturn status,
+                              uint32_t actualByteCount,
+                              uint64_t completionTimestamp) TYPE(IOUSBHostPipe::CompleteAsyncIO);
+
+    virtual void WriteComplete(OSAction *action TARGET,
+                               IOReturn status,
+                               uint32_t actualByteCount,
+                               uint64_t completionTimestamp) TYPE(IOUSBHostPipe::CompleteAsyncIO);
+
+    virtual void TimerFired(OSAction *action TARGET,
+                            uint64_t time) TYPE(IOTimerDispatchSource::TimerOccurred);
+
+private:
+    bool openInterface(IOService *provider) LOCALONLY;
+
+    bool createIO() LOCALONLY;
+
+    kern_return_t submitRead(uint32_t index) LOCALONLY;
+
+    void startWrite() LOCALONLY;
+
+    void publish(uint64_t timestamp) LOCALONLY;
+
+    void armTimer() LOCALONLY;
+
+    /* Stops the motors when the last rumble report's play time ran out. */
+    void expireRumble(long now) LOCALONLY;
+
+    void teardown() LOCALONLY;
+};
+
+#endif /* XPadGIPGamepad_h */

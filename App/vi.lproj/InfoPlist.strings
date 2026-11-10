@@ -1,0 +1,4 @@
+/* Vietnamese values for the Info.plist keys macOS shows to the user. */
+
+/* Shown by macOS when XPadMac asks to install its driver extension. */
+"NSSystemExtensionUsageDescription" = "Cài driver XPadMac cho tay cầm Xbox One (GIP) và Xbox 360 (XInput).";

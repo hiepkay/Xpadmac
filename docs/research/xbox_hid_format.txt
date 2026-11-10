@@ -1,0 +1,219 @@
+Research notes: how macOS GameController matches and parses an Xbox controller, and
+which DriverKit entitlements a driver like XPadMac needs. Gathered on macOS 27.2
+(Apple silicon) from local binaries (kernelcache, XboxGamepad.dext,
+XboxOneHIDServicePlugin, GameController.framework), IOHIDFamily source, Apple DTS
+forum threads, xpadneo and SDL. Machine- and account-specific details removed.
+
+##### research:signing (generic parts)
+=== FEASIBILITY VERDICTS ===
+A) CoreHID HIDVirtualDevice / IOHIDUserDevice with com.apple.developer.hid.virtual.device: NOT feasible now. It needs Account Holder approval (no development version; months of queue as of Sep 2026). Neither root nor SIP-on gets around it. Even if approved, the device is forced to Transport="Virtual", so GameController matching is uncertain.
+B) Development-signed DriverKit dext (USB GIP host + AppleUserHIDDevice), SIP ON: FEASIBLE with no Apple approval. Needs: a paid team signed in to Xcode (or the portal), the Mac registered as a macOS device in that team (by its Provisioning UDID), the host app in /Applications, user approval.
+C) Developer ID-distributed dext: feasible, but the Account Holder must request DriverKit + USB Transport (the vendor IDs, in decimal) + HID Device family first; expect weeks.
+
+=== Dext entitlements, DEVELOPMENT (Driver.entitlements) ===
+<key>com.apple.developer.driverkit</key><true/>
+<key>com.apple.developer.driverkit.transport.usb</key>
+<array><dict><key>idVendor</key><string>*</string></dict></array>
+<key>com.apple.developer.driverkit.family.hid.device</key><true/>
+<key>com.apple.security.app-sandbox</key><true/>
+<!-- optional, dev-only, only if the app opens an IOUserClient on the dext: -->
+<!-- <key>com.apple.developer.driverkit.allow-any-userclient-access</key><true/> -->
+Do NOT include com.apple.developer.hid.virtual.device or com.apple.developer.driverkit.family.hid.virtual.device in the dext.
+
+=== Dext entitlements, RELEASE / Developer ID (only after Apple's approval) ===
+com.apple.developer.driverkit = true
+com.apple.developer.driverkit.transport.usb = [ { idVendor = <each vendor ID, decimal>; idProductArray optional } ]
+com.apple.developer.driverkit.family.hid.device = true
+In the request, give the IDs in both hex and decimal (e.g. VID 0x0E6F = 3695).
+
+=== Host app entitlements ===
+<key>com.apple.developer.system-extension.install</key><true/>
+
+=== Apple template, verbatim from /System/Library/DriverExtensions/XboxGamepad.dext ===
+Entitlements: com.apple.developer.driverkit=true, com.apple.developer.driverkit.builtin=true, com.apple.developer.driverkit.family.hid.device=true, com.apple.developer.driverkit.transport.usb=[{idVendor=1118, idProductArray=[654,746,2816,2834]}]
+XboxOneSDevice: {IOUserClass=XboxUSBDevice, IOProviderClass=IOUSBHostDevice, IOClass=IOUserService, CFBundleIdentifierKernel=com.apple.kpi.iokit, idProduct=746, idVendor=1118, IOUserServerName=com.apple.gamecontroller.driver.XboxGamepad, bDeviceClass=255}
+XboxOneSGamepad: {IOUserClass=XboxOneSGamepad, IOProviderClass=IOUSBHostInterface, IOClass=AppleUserHIDDevice, bInterfaceClass=255, bInterfaceSubClass=71, bInterfaceProtocol=208, CFBundleIdentifierKernel=com.apple.kpi.iokit, idProduct=746, idVendor=1118, IOUserServerName=com.apple.gamecontroller.driver.XboxGamepad}
+Third-party version: same keys, with your vendor and product IDs, IOUserServerName and CFBundleIdentifier = your dext bundle ID, and your own IOUserClass names. A GIP pad's interface 1 (audio) is also FF/47/D0, so add bInterfaceNumber=0 to the interface personality.
+
+=== AppleGameControllerPersonality targets (local kext plist) ===
+Wired, no GCIOMatchVirtual: "Xbox Wired Controller IOService" VendorID 1118 ProductID 746; 360 = 654; Elite V2 USB = 2816; Series X Wired = 2834.
+Virtual allowed (GCIOMatchVirtual=true): Wireless [736,765,2848]; Series X Wireless [2835,2851,2895]; Elite V2 [2818,2821,2850,2876].
+Generic: "Generic Controller Device", IOProbeScore 1301, IOParentMatch {IOPropertyMatch {GameControllerSupportedHIDDevice=true, GameControllerCategory="dynamic"}}.
+
+=== Kernel gate (IOHIDFamily-2238.120.5, IOHIDResourceUserClient.cpp) ===
+#define kIOHIDManagerUserAccessUserDeviceEntitlement "com.apple.hid.manager.user-access-device"
+#define kIOHIDVirtualDeviceEntitlement "com.apple.developer.hid.virtual.device"
+initWithTask: accepts only one of these two entitlements; no clientHasPrivilege/root check; otherwise logs "%s is not entitled".
+Restricted HID property keys: IOUserClientClass, IOClass, IOProviderClass, IOKitDebug, IOServiceDEXTEntitlements, HIDDevicePrivileged. VendorID and ProductID are not restricted.
+
+=== sysextd code requirement (strings in macOS 27.2) ===
+anchor apple or (anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.9] exists) or (anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and notarized) or (anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.9.1] exists) or (anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.12] exists) or ...
+An Apple Development certificate contains 1.2.840.113635.100.6.1.12, so development signing passes without notarization.
+Also: "App containing System Extension to be activated must be in /Applications folder. Current location: ..."; systemextensionsctl: "At this time, this tool cannot be used if System Integrity Protection is enabled."
+
+Key URLs:
+https://developer.apple.com/contact/request/system-extension/ (request form; Apple ID sign-in)
+https://developer.apple.com/system-extensions/
+https://developer.apple.com/help/account/capabilities/capability-requests/
+https://developer.apple.com/forums/thread/809202 (DTS: How to sign a DEXT)
+https://developer.apple.com/forums/thread/843327 (DTS: HID Entitlement Configuration Guide)
+https://developer.apple.com/forums/thread/842748 (third-party vendor IDs are eligible)
+
+##### research:xbox-hid-format
+I traced the whole matching and parsing path for a virtual Xbox controller on macOS 27.2, from local binaries rather than guesses. The safest choice is VID 0x045E / PID 0x0B13 (Xbox Series X|S over Bluetooth LE) using the controller's real 283-byte unified Bluetooth LE HID descriptor, copied byte for byte (CRC-16/ARC 0x931D, matching xpadneo). Input report ID 1 is 17 bytes; rumble arrives as output report ID 3, 9 bytes.
+
+The kernel side: AppleGCHIDUserEventDriver::probe was disassembled from the decompressed kernelcache. When the personality has GCIOMatchVirtual=true, a virtual HID device matches unless it has GCSyntheticDevice=true, GameControllerEligible=false, or PrimaryUsagePage 0x84. Personalities without that flag (all the wired ones) need Privileged=true, which only the Apple-internal entitlement com.apple.hid.manager.user-access-device grants.
+
+The parser: GameController does not read the descriptor generically. Reports are parsed at fixed byte offsets by /System/Library/HIDPlugins/ServicePlugins/XboxOneHIDServicePlugin.plugin, which runs in hidd. Its matchService accepts the device only if VendorID is 0x45E, Transport is not "USB", and the PID is in {02EA, 02FD, 02E0, 0B20, 0B02, 0B05, 0B22, 0B0C, 0B21, 0B13, 0B23, 0B4F, 0B3C}. Its initWithService then checks four descriptor elements to set flags: Brake 2/C5 and Accelerator 2/C4 (both present selects the 'Android' layout), Consumer AC Back C/224 (absent means View is a bit in the button field), and Consumer Record C/B2 (present means Share exists). With the 0x0B13 descriptor all four flags come out right: Android layout, View in byte 15 bit 2, Share in byte 16 bit 0, Guide in byte 15 bit 4.
+
+Transport: IOHIDUserDevice forces Transport to "Virtual" for any creator that is not privileged (IOHIDFamily source), and "Virtual" passes the plugin's not-"USB" check. GameController's _GCMicrosoftXboxControllerProfile treats 0x0B12, 0x0B13, 0x0B23 and 0x0B4F as Series X, which includes the Share button.
+
+Apple's wired dext (XboxGamepad.dext) holds four descriptors, identified by their symbol names. Three are 55-byte vendor-defined GIP pass-through descriptors and one is a 212-byte Xbox 360 descriptor. They do not help here, because the wired personalities lack GCIOMatchVirtual and the wired plugin (XboxGamepadHIDServicePlugin) only accepts 02EA, 0B00, 0B12 and 028E.
+
+The earlier grep of the dyld cache was wrong. The string GameControllerSupportedHIDDevice is in GameController.framework (subcache .32) and in the kernel (IOGameControllerFamily's IOGCDynamicDeviceProbe).
+
+Not verified end to end: creating any IOHIDUserDevice still needs a provisioning profile carrying com.apple.developer.hid.virtual.device. That is a 'HID Virtual Device' capability request to Apple, and an Apple forum thread reports waits of months.
+- high | AppleGCHIDUserEventDriver::probe logic (kernel, macOS 27.2): reads GCIOMatchVirtual (OSBoolean, from the personality), and from the HID device CFBundleIdentifier, IOUserClass, GCSyntheticDevice, HIDVirtualDevice, Privileged, GameControllerEligible, plus PrimaryUsagePage from the IOHIDInterface. It rejects if PrimaryUsagePage==0x84, if GameControllerEligible isFalse, or if GCSyntheticDevice==kOSBooleanTrue. If GCIOMatchVirtual isTrue it returns a match right away. Otherwise a dext-backed device (IOUserClass and CFBundleIdentifier set) must have a bundle ID starting with 'com.apple.', and a device with HIDVirtualDevice==true must have Privileged present and not kOSBooleanFalse.
+- high | The personalities that accept virtual devices (GCIOMatchVirtual=true) are: 'Xbox Wireless Controller' 045E:[02E0,02FD,0B20]; 'Xbox Series X Wireless Controller' 045E:[0B13,0B23,0B4F]; 'Xbox Elite V2 Controller' 045E:[0B02,0B05,0B22,0B3C]; plus Switch Pro 057E:2009 and DualSense 054C:0CE6. The wired personalities (360 028E, One S wired 02EA, Elite V2 USB 0B00, Series X wired 0B12) and the Adaptive Controller (0B0C, 0B21) do not have the flag.
+- high | For a creator that is not privileged, IOHIDUserDevice forces Transport to 'Virtual' and sets HIDVirtualDevice=true and Privileged=false. 'Privileged' is true only with com.apple.hid.manager.user-access-device. Putting IOUserClientClass, IOClass, IOProviderClass, IOKitDebug, IOServiceDEXTEntitlements or Privileged in the properties makes creation fail with kIOReturnBadArgument.
+- high | Bluetooth Xbox reports are parsed at fixed byte offsets in user space by XboxOneHIDServicePlugin (principal class, bundle com.apple.GameController.HID.XboxOne). Its plist matches services with GameControllerCategory='xbox' and GameControllerSupport=true. +matchService: needs super's match (GameControllerIO base class, which checks for AppleGCHIDUserEventDriver), VendorID==0x45E, Transport not equal to @"USB", and ProductID in {0x2EA,0x2FD,0x2E0,0xB20,0xB02,0xB05,0xB22,0xB0C,0xB21,0xB13,0xB23,0xB4F,0xB3C}. 'Virtual' or a missing Transport passes.
+- high | -[XboxOneHIDServicePlugin initWithService:] picks the layout from PID and descriptor elements. Type: 0xB02/0xB05/0xB22/0xB3C='elite'(1); 0xB0C/0xB21='adaptive'(2); 0xB13/0xB23/0xB4F='series x'(3); anything else 'standard'(0). Descriptor flags come from [device elementsMatching:] with four constant dictionaries: {UsagePage 2, Usage 0xC5} brake, {2, 0xC4} accelerator, {0x0C, 0x224} AC Back, {0x0C, 0xB2} Record. _isAndroidProfile = brake AND accelerator present. _viewInDigitalButtonsField = no AC Back element. _shareButtonPresent = a Record element exists.
+- high | Input report ID 1, as parsed by Apple with the Android layout (descriptors 0x0B13 and 02FD Linux-mode). Each item below is byte index: meaning. [0]: 0x01. [1..2] LX, [3..4] LY, [5..6] RX, [7..8] RY: u16 LE 0..65535, centre 0x8000, 0 = left/up, scaled as v/65536-0.5. [9..10] LT and [11..12] RT: u16 LE 0..1023, divided by 1023. [13]: hat in the low nibble, 0 neutral, 1=N, 2=NE, 3=E, 4=SE, 5=S, 6=SW, 7=W, 8=NW. [14]: bit0 A, bit1 B, bit3 X, bit4 Y, bit6 LB, bit7 RB. [15]: bit2 View (only when the descriptor has no AC Back), bit3 Menu, bit4 Xbox/Guide, bit5 LS, bit6 RS. [16]: bit0 Share when Record is present and View is in the digital field; otherwise bit0 = View (AC Back, 1708 Linux-mode). Report 2: data[1] bit0 = Home (dispatchAlternateHome). Report 4: data[1] is a battery bitfield (Level b0-1, Type b2-3, Charge b4-5, PowerLevel b6-7). The handler does not check length, so send the full 17 bytes.
+- medium | Windows layout (no Brake/Accelerator, as in the 1708 'Windows mode' 306-byte descriptor). Byte index: meaning. [14]: bit0 A, bit1 B, bit2 X, bit3 Y, bit4 LB, bit5 RB, bit6 View, bit7 Menu. [15]: bit0 LS, bit1 RS. Guide only via report 2. Avoid this layout.
+- high | Apple sends rumble as an Output report: setReport length 9, reportID 3, type kIOHIDReportTypeOutput. Byte index: meaning. [0]: 0x03. [1]: 0x0F when haptics are active, 0xFF when stopping. [2]: Left Impulse (LT). [3]: Right Impulse (RT). [4]: Left Rumble (strong/low frequency). [5]: Right Rumble (weak/high frequency). Each magnitude is GCHapticMotor intensity x100, range 0..100. [6]: duration, 0x0A (10 x 10 ms) when active, 0 when stopping. [7]: delay 0. [8]: loop count 0. No rumble is sent for type 2 (Adaptive). The magnitudes have the same 0..100 scale as the GIP 0x09 payload, so they can be forwarded directly to a GIP pad.
+- high | The Series X|S Bluetooth LE descriptor (0x0B13, also used by every non-Elite model on BLE firmware) is 283 bytes, CRC-16/ARC 0x931D. It has Report 1 Input (16 payload bytes, 17 with the ID) and Report 3 Output (8 bytes, 9 with the ID), and no battery report 4. The xpadneo parsed comment 'Logical Maximum (65534)' is wrong: 27 FF FF 00 00 decodes to 65535.
+- medium | The Xbox One S 1708 Bluetooth Classic descriptor (PID 0x02FD, 'Linux mode', firmware 4.8 era) is 334 bytes. Report 1 Input is 16 bytes (17 with the ID), the same as the BLE layout except byte 16 bit0 is Consumer AC Back (View) instead of Record. Report 2 Input is Consumer AC Home (1 byte). Report 3 is the same rumble output. Report 4 is Generic Device Battery Strength (1 byte). Fed to Apple's plugin, this descriptor gives the Android layout, View at [16] bit0, and no Share.
+- medium | GameController.framework's Xbox profile picks the physical input type from the PID only. 0xB12, 0xB13, 0xB23 and 0xB4F give type 3, 'Series X' (adds buttonShare). 0xB02 and 0xB05 give Elite (paddles). 0xB0C gives Adaptive. Everything else, including 02E0/02FD/0B20, gives standard Xbox One with no Share.
+- high | XboxGamepad.dext descriptors, identified by symbol: 0x1C000 is Xbox360HIDGamepadDeviceDescriptor (212 bytes, the 360 wired layout: report without ID, 20 bytes; plus Output ID 0x31, 77 bytes). 0x1C0D4 is XboxOneSGamepadUSBHIDDeviceDescriptor (55 bytes). 0x1C10B is XboxSeriesXGamepadUSBHIDDeviceDescriptor (55). 0x1C142 is XboxEliteV2GamepadUSBHIDDeviceDescriptor (55). The 55-byte ones are vendor page 0xFF00 GIP pass-through: Output ID1 12 bytes, Output ID5 4 bytes, Input ID7 5 bytes (GIP virtual-key/guide), Input ID 0x20 of 17 bytes (One S, Elite V2) or 18 bytes (Series X, Share). The same data is in both slices (arm64e and arm64e.x1 at +0x2C000). XboxWirelessGamepad has no descriptor of its own. These are consumed by XboxGamepadHIDServicePlugin, which accepts only 045E:02EA/0B00/0B12/028E, so they are not usable for a virtual device without privilege.
+- high | GameController creates its own virtual Xbox 360 devices (_GCSyntheticXbox360Controller). They carry a 188-byte 360 descriptor, Manufacturer 'Microsoft', Product 'GamePad-1', VendorID, ProductID, VersionNumber, and are tagged GCSyntheticDevice, which is the property the kernel probe uses to keep them away from GameController. This confirms a minimal property set works for Apple's own virtual Xbox device.
+- high | The earlier claim that 'GameControllerSupportedHIDDevice' is absent from the dyld cache was wrong. Checked against a known string (GCControllerDidConnectNotification, found in .15/.21/.32/.34), GameControllerSupportedHIDDevice is at subcache .32 offset 0x78e995c, inside GameController (next to 'GCController.supportsHIDDevice' and 'IOGCDynamicDeviceProbe'). It is also in the kernel at IOGameControllerFamily, whose 'Dynamic IOHIDDevice Probe' (IOGCDynamicDeviceProbe) matches every GD 1/4 and 1/5 IOHIDDevice and has a user client.
+- medium | The virtual-device route still depends on Apple granting com.apple.developer.hid.virtual.device in a provisioning profile, via the 'HID Virtual Device' capability request. An Apple DTS engineer said GameController matches 'specific (undocumented) hardware details' and was not certain a CoreHID virtual gamepad would be recognized. One reported request had been pending about 2.5 months.
+ARTIFACTS:
+=== RECOMMENDED: VID 0x045E PID 0x0B13, Series X|S Bluetooth LE unified descriptor (283 bytes, CRC-16/ARC 0x931D) ===
+static const uint8_t kXboxSeriesBLE_0B13_HIDDesc[283] = {
+    0x05, 0x01, 0x09, 0x05, 0xA1, 0x01, 0x85, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x09, 0x30, 0x09, 0x31,
+    0x15, 0x00, 0x27, 0xFF, 0xFF, 0x00, 0x00, 0x95, 0x02, 0x75, 0x10, 0x81, 0x02, 0xC0, 0x09, 0x01,
+    0xA1, 0x00, 0x09, 0x32, 0x09, 0x35, 0x15, 0x00, 0x27, 0xFF, 0xFF, 0x00, 0x00, 0x95, 0x02, 0x75,
+    0x10, 0x81, 0x02, 0xC0, 0x05, 0x02, 0x09, 0xC5, 0x15, 0x00, 0x26, 0xFF, 0x03, 0x95, 0x01, 0x75,
+    0x0A, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x06, 0x95, 0x01, 0x81, 0x03, 0x05, 0x02, 0x09,
+    0xC4, 0x15, 0x00, 0x26, 0xFF, 0x03, 0x95, 0x01, 0x75, 0x0A, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00,
+    0x75, 0x06, 0x95, 0x01, 0x81, 0x03, 0x05, 0x01, 0x09, 0x39, 0x15, 0x01, 0x25, 0x08, 0x35, 0x00,
+    0x46, 0x3B, 0x01, 0x66, 0x14, 0x00, 0x75, 0x04, 0x95, 0x01, 0x81, 0x42, 0x75, 0x04, 0x95, 0x01,
+    0x15, 0x00, 0x25, 0x00, 0x35, 0x00, 0x45, 0x00, 0x65, 0x00, 0x81, 0x03, 0x05, 0x09, 0x19, 0x01,
+    0x29, 0x0F, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x0F, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00,
+    0x75, 0x01, 0x95, 0x01, 0x81, 0x03, 0x05, 0x0C, 0x0A, 0xB2, 0x00, 0x15, 0x00, 0x25, 0x01, 0x95,
+    0x01, 0x75, 0x01, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x07, 0x95, 0x01, 0x81, 0x03, 0x05,
+    0x0F, 0x09, 0x21, 0x85, 0x03, 0xA1, 0x02, 0x09, 0x97, 0x15, 0x00, 0x25, 0x01, 0x75, 0x04, 0x95,
+    0x01, 0x91, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x04, 0x95, 0x01, 0x91, 0x03, 0x09, 0x70, 0x15,
+    0x00, 0x25, 0x64, 0x75, 0x08, 0x95, 0x04, 0x91, 0x02, 0x09, 0x50, 0x66, 0x01, 0x10, 0x55, 0x0E,
+    0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0x09, 0xA7, 0x15, 0x00, 0x26,
+    0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0x65, 0x00, 0x55, 0x00, 0x09, 0x7C, 0x15, 0x00,
+    0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0xC0, 0xC0,
+};
+Decoded: Report 1 Input: X,Y (16-bit, 0..65535) | Z,Rz (right stick, 16-bit) | Sim Brake 10b + 6b pad (LT) | Sim Accelerator 10b + 6b pad (RT) | Hat 4b (1..8, null) + 4b pad | Buttons 1..15 + 1b pad | Consumer Record 1b + 7b pad. Report 3 Output (PID page): DC Enable Actuators 4b + 4b pad | Magnitude x4 (0..100) | Duration (10 ms units) | Start Delay | Loop Count.
+
+=== Alternative: 045E:02FD Xbox One S 1708, Bluetooth Classic 'Linux mode' (334 bytes; the trailing 0x00 in the xpadneo dump was dropped) ===
+static const uint8_t kXboxOneS1708_02FD_LinuxMode_HIDDesc[334] = {
+    0x05, 0x01, 0x09, 0x05, 0xA1, 0x01, 0x85, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x09, 0x30, 0x09, 0x31,
+    0x15, 0x00, 0x27, 0xFF, 0xFF, 0x00, 0x00, 0x95, 0x02, 0x75, 0x10, 0x81, 0x02, 0xC0, 0x09, 0x01,
+    0xA1, 0x00, 0x09, 0x32, 0x09, 0x35, 0x15, 0x00, 0x27, 0xFF, 0xFF, 0x00, 0x00, 0x95, 0x02, 0x75,
+    0x10, 0x81, 0x02, 0xC0, 0x05, 0x02, 0x09, 0xC5, 0x15, 0x00, 0x26, 0xFF, 0x03, 0x95, 0x01, 0x75,
+    0x0A, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x06, 0x95, 0x01, 0x81, 0x03, 0x05, 0x02, 0x09,
+    0xC4, 0x15, 0x00, 0x26, 0xFF, 0x03, 0x95, 0x01, 0x75, 0x0A, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00,
+    0x75, 0x06, 0x95, 0x01, 0x81, 0x03, 0x05, 0x01, 0x09, 0x39, 0x15, 0x01, 0x25, 0x08, 0x35, 0x00,
+    0x46, 0x3B, 0x01, 0x66, 0x14, 0x00, 0x75, 0x04, 0x95, 0x01, 0x81, 0x42, 0x75, 0x04, 0x95, 0x01,
+    0x15, 0x00, 0x25, 0x00, 0x35, 0x00, 0x45, 0x00, 0x65, 0x00, 0x81, 0x03, 0x05, 0x09, 0x19, 0x01,
+    0x29, 0x0F, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x0F, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00,
+    0x75, 0x01, 0x95, 0x01, 0x81, 0x03, 0x05, 0x0C, 0x0A, 0x24, 0x02, 0x15, 0x00, 0x25, 0x01, 0x95,
+    0x01, 0x75, 0x01, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x07, 0x95, 0x01, 0x81, 0x03, 0x05,
+    0x0C, 0x09, 0x01, 0x85, 0x02, 0xA1, 0x01, 0x05, 0x0C, 0x0A, 0x23, 0x02, 0x15, 0x00, 0x25, 0x01,
+    0x95, 0x01, 0x75, 0x01, 0x81, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x07, 0x95, 0x01, 0x81, 0x03,
+    0xC0, 0x05, 0x0F, 0x09, 0x21, 0x85, 0x03, 0xA1, 0x02, 0x09, 0x97, 0x15, 0x00, 0x25, 0x01, 0x75,
+    0x04, 0x95, 0x01, 0x91, 0x02, 0x15, 0x00, 0x25, 0x00, 0x75, 0x04, 0x95, 0x01, 0x91, 0x03, 0x09,
+    0x70, 0x15, 0x00, 0x25, 0x64, 0x75, 0x08, 0x95, 0x04, 0x91, 0x02, 0x09, 0x50, 0x66, 0x01, 0x10,
+    0x55, 0x0E, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0x09, 0xA7, 0x15,
+    0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0x65, 0x00, 0x55, 0x00, 0x09, 0x7C,
+    0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x91, 0x02, 0xC0, 0x05, 0x06, 0x09, 0x20,
+    0x85, 0x04, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x01, 0x81, 0x02, 0xC0,
+};
+
+=== Input report 1 (17 bytes; layout as Apple's XboxOneHIDServicePlugin parses it) ===
+#pragma pack(push,1)
+typedef struct {
+  uint8_t  report_id;            /* 0x01 */
+  uint16_t lx, ly, rx, ry;       /* LE, 0..65535, centre 0x8000, 0 = left / up */
+  uint16_t lt, rt;               /* LE, 0..1023 (10 bits; upper 6 bits 0) */
+  uint8_t  hat;                  /* low nibble: 0 none,1 N,2 NE,3 E,4 SE,5 S,6 SW,7 W,8 NW */
+  uint8_t  btn0;                 /* b0 A, b1 B, b3 X, b4 Y, b6 LB, b7 RB  (b2,b5 = HID buttons 3,6 unused) */
+  uint8_t  btn1;                 /* b2 View, b3 Menu, b4 Xbox/Guide, b5 LS, b6 RS (b0,b1 unused, b7 pad) */
+  uint8_t  btn2;                 /* 0x0B13: b0 Share (Consumer Record). 02FD Linux-mode: b0 View (AC Back) */
+} xbox_bt_in1_t;                 /* sizeof == 17 */
+#pragma pack(pop)
+/* idle report */ static const uint8_t kIdle[17] = {0x01,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+GIP 0x20 payload (as in AnyPad gip.c, p = payload after 4-byte header) to BLE report:
+  lx = (uint16_t)(les16(p+6)+32768);  ly = (uint16_t)(32767-les16(p+8));  rx = (uint16_t)(les16(p+10)+32768);  ry = (uint16_t)(32767-les16(p+12));
+  lt = (p[2]|p[3]<<8)&0x3FF;  rt = (p[4]|p[5]<<8)&0x3FF;
+  btn0: A=p0&0x10 to b0, B=p0&0x20 to b1, X=p0&0x40 to b3, Y=p0&0x80 to b4, LB=p1&0x10 to b6, RB=p1&0x20 to b7
+  btn1: View=p0&0x08 to b2, Menu=p0&0x04 to b3, Guide (GIP cmd 0x07, byte0&1) to b4, LS=p1&0x40 to b5, RS=p1&0x80 to b6
+  hat from p1 b0 up, b1 down, b2 left, b3 right: U=1, U+R=2, R=3, D+R=4, D=5, D+L=6, L=7, U+L=8, none=0
+Send it with IOHIDUserDeviceHandleReportWithTimeStamp(dev, mach_absolute_time(), buf, 17).
+(Optional, 02FD only) Report 2 = {0x02, home&1}; Report 4 = {0x04, batt} where batt = level b0-1 | type b2-3 | charge b4-5 | power b6-7.
+
+=== Rumble output report Apple sends (set-report callback: type kIOHIDReportTypeOutput=1, reportID 3, 9 bytes) ===
+ [0]=0x03 [1]=0x0F active / 0xFF stop [2]=LT impulse [3]=RT impulse [4]=left/strong [5]=right/weak  (each 0..100)
+ [6]=0x0A active (100 ms) / 0x00 stop [7]=0x00 delay [8]=0x00 loop
+To a GIP pad: {0x09,0x00,seq,0x09,0x00,0x0F,LT,RT,strong,weak,dur,delay,repeat}. Same 0..100 scale (SDL divides by 655 in both paths). Send dur=0xFF, repeat=0xFF as gip.c does, and refresh on each output report; send zeros when [1]==0xFF or all magnitudes are 0.
+
+=== IOHIDUserDevice properties ===
+CFMutableDictionaryRef p = CFDictionaryCreateMutable(NULL,0,&kCFTypeDictionaryKeyCallBacks,&kCFTypeDictionaryValueCallBacks);
+ "ReportDescriptor" = CFData(kXboxSeriesBLE_0B13_HIDDesc, 283)
+ "VendorID"         = 1118  (0x045E)
+ "ProductID"        = 2835  (0x0B13)   (fallback: 765 = 0x02FD with the 334-byte descriptor; no Share)
+ "VersionNumber"    = 0x0517 (cosmetic, not read by the plugin; real BLE pads report firmware such as 0x0523 for Elite 5.23 per xpadneo)
+ "Product"          = "Xbox Wireless Controller"
+ "Manufacturer"     = "Microsoft"
+ "SerialNumber"     = a unique string, e.g. MAC-style "98-7A-14-xx-xx-xx" (GameController uses it as the identifier only when Transport == "Bluetooth")
+ "Transport"        = "BluetoothLowEnergy" (kIOHIDTransportBluetoothLowEnergyValue). The kernel replaces it with "Virtual" for non-privileged creators, which is fine; it must never be "USB".
+ "CountryCode"      = 0
+ "PrimaryUsagePage" = 1, "PrimaryUsage" = 5 (IOHIDDevice derives these from the descriptor; must not be 0x84)
+ "ReportInterval"   = 8000 (microseconds; real BLE value unknown; not checked)
+ "VendorIDSource"   = 2 (optional)
+DO NOT set: GCSyntheticDevice (kernel probe rejects), GameControllerEligible=false (rejects), IOClass/IOProviderClass/IOUserClientClass/IOKitDebug/IOServiceDEXTEntitlements/Privileged (creation fails with kIOReturnBadArgument).
+IOHIDUserDeviceRef d = IOHIDUserDeviceCreateWithProperties(kCFAllocatorDefault, p, 0);  /* needs com.apple.developer.hid.virtual.device in a provisioning profile */
+IOHIDUserDeviceRegisterSetReportCallback(d, cb, ctx); IOHIDUserDeviceSetDispatchQueue(d, q); IOHIDUserDeviceActivate(d);
+
+=== Matching chain to verify in ioreg after creation ===
+IOHIDUserDevice (HIDVirtualDevice=Yes, Privileged=No, Transport="Virtual") -> IOHIDInterface -> AppleGCHIDUserEventDriver (GameControllerCategory="xbox", GameControllerSupport=Yes, HIDServiceSupport=Yes); hidd loads XboxOneHIDServicePlugin (log subsystem com.apple.GameController.HID, category XboxOne: 'recognized series x controller', 'descriptor contains brake? 1', 'accelerator? 1', 'view moved to digital buttons field? 1', 'share button present? 1', 'using Android profile').
+Check with: ioreg -r -c AppleGCHIDUserEventDriver -l ; log stream --predicate 'subsystem == "com.apple.GameController.HID"'
+
+=== Apple wired dext descriptors (XboxGamepad.dext, file offsets in the arm64e slice; identical copies at +0x2C000) ===
+static const uint8_t kAppleDext_XboxOneSGamepadUSBHIDDeviceDescriptor[55] = { /* file 0x1C0D4 */
+    0x05,0x01,0x09,0x05,0xA1,0x01,0x06,0x00,0xFF,0x15,0x00,0x26,0xFF,0x00,0x85,0x01,
+    0x09,0x01,0x75,0x08,0x95,0x0C,0x91,0x02,0x85,0x05,0x09,0x05,0x75,0x08,0x95,0x04,
+    0x91,0x02,0x85,0x07,0x09,0x07,0x75,0x08,0x95,0x05,0x81,0x02,0x85,0x20,0x09,0x20,
+    0x75,0x08,0x95,0x11,0x81,0x02,0xC0 };
+kAppleDext_XboxSeriesXGamepadUSBHIDDeviceDescriptor[55] (file 0x1C10B): identical except byte 51 = 0x12 (Input 0x20 count 18).
+kAppleDext_XboxEliteV2GamepadUSBHIDDeviceDescriptor[55] (file 0x1C142): identical to One S (count 0x11).
+static const uint8_t kAppleDext_Xbox360HIDGamepadDeviceDescriptor[212] = { /* file 0x1C000 */
+    0x05,0x01,0x09,0x05,0xA1,0x01,0x05,0x01,0x09,0x3A,0xA1,0x02,0x75,0x08,0x95,0x02,
+    0x05,0x01,0x09,0x3F,0x09,0x3B,0x81,0x01,0x75,0x01,0x15,0x00,0x25,0x01,0x35,0x00,
+    0x45,0x01,0x95,0x04,0x05,0x09,0x19,0x0C,0x29,0x0F,0x81,0x02,0x75,0x01,0x15,0x00,
+    0x25,0x01,0x35,0x00,0x45,0x01,0x95,0x04,0x05,0x09,0x09,0x09,0x09,0x0A,0x09,0x07,
+    0x09,0x08,0x81,0x02,0x75,0x01,0x15,0x00,0x25,0x01,0x35,0x00,0x45,0x01,0x95,0x03,
+    0x05,0x09,0x09,0x05,0x09,0x06,0x09,0x0B,0x81,0x02,0x75,0x01,0x95,0x01,0x81,0x01,
+    0x75,0x01,0x15,0x00,0x25,0x01,0x35,0x00,0x45,0x01,0x95,0x04,0x05,0x09,0x19,0x01,
+    0x29,0x04,0x81,0x02,0x75,0x08,0x15,0x00,0x26,0xFF,0x00,0x35,0x00,0x46,0xFF,0x00,
+    0x95,0x02,0x05,0x01,0x09,0x32,0x09,0x35,0x81,0x02,0x75,0x10,0x16,0x00,0x80,0x26,
+    0xFF,0x7F,0x36,0x00,0x80,0x46,0xFF,0x7F,0x05,0x01,0x09,0x01,0xA1,0x00,0x95,0x02,
+    0x05,0x01,0x09,0x30,0x09,0x31,0x81,0x02,0xC0,0x05,0x01,0x09,0x01,0xA1,0x00,0x95,
+    0x02,0x05,0x01,0x09,0x33,0x09,0x34,0x81,0x02,0xC0,0x75,0x08,0x95,0x06,0x81,0x01,
+    0x06,0x00,0xFF,0x15,0x00,0x26,0xFF,0x00,0x85,0x31,0x09,0x01,0x75,0x08,0x95,0x4D,
+    0x91,0x02,0xC0,0xC0 };
+GameController synthetic 360 descriptor (188 bytes) = the first 184 bytes of the array above up to and including the two 0xC0 after the Ry collection (no 6-byte pad, no Output 0x31), followed by 0xC0,0xC0. Location: dyld_shared_cache_arm64e.54.dylddata offsets 0x7a492c8 and 0x7e68d08.
+
+=== Key code locations (for re-checking) ===
+Kernel AppleGCHIDUserEventDriver::probe: fileset entry com.apple.driver.AppleGameControllerPersonality, text 0xfffffe00094f55c0 (annotated: <scratch>/kc/gc.ann; decompressed kernel: <scratch>/kc/kc.macho)
+XboxOneHIDServicePlugin (arm64e): matchService 0xEEC, initWithService 0x10D8, report block 0x18E4, dispatchHapticEvent 0x200C, matching dicts in __objc_dictobj at 0x4350.
+GameController: +[_GCMicrosoftXboxControllerProfile logicalDeviceDeterminePhysicalInputType:] 0x217C145C0
+Extraction scripts: <scratch>/scripts/ (finddesc.py, hiddec.py, cinit.py); generated arrays: <scratch>/desc/all_compact.c, <scratch>/desc/xbxs.c (commented), <scratch>/desc/xb1s.c (commented)
+OPEN: ["Untested end to end: IOHIDUserDeviceCreateWithProperties needs com.apple.developer.hid.virtual.device in a provisioning profile (a 'HID Virtual Device' capability request). Without it nothing can be created, so the GCController.controllers() result for 045E:0B13 with Transport 'Virtual' is unconfirmed.", "hidd's loading of HID service plugins for HIDVirtualDevice services was not checked; I am assuming it treats them like real ones. The only 'HIDVirtualDevice' references I found in user space are in SkyLight, IOBluetooth, BackBoardHIDEventFoundation, PreferencePanesSupport, CoreHID and MachineSettings, none of them GameController code.", 'The real VersionNumber, ReportInterval and SerialNumber format that a genuine BLE Xbox controller shows in macOS ioreg are unknown; no ioreg dump was found online. None of them are read by the Xbox plugin.', 'The exact BLE descriptor for the 1708 on firmware 5.x (PID 0x0B20) was not obtained. It is assumed to be the unified 283-byte one (xpadneo README), but that is unverified for 0x0B20.', "The CRC of the 334-byte 1708 Linux-mode descriptor (0x7E83, CRC-16/ARC) does not match the 0x4154 quoted in xpadneo's notes. The bytes come from the doc's hex dump and may be a slightly different capture.", "The 283-byte 0x0B13 descriptor has no battery report 4, so GameController battery for the virtual device probably reads as unavailable. The plugin's shouldCreateBatteryDevice returns NO. Adding a report-4 collection would change the descriptor; the effect is unknown.", "Haptics: whether GameController's CHHapticEngine path (XboxHapticCapabilityGraph) and GCDeviceHaptics are offered for a 'Virtual' transport device was not traced. The output report format itself is confirmed."]

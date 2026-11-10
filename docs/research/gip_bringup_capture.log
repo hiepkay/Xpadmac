@@ -1,0 +1,20 @@
+[     6] strategy: plain, async reads. waiting for 3537:1004 (replug the pad)
+[ 70441] opened, config 0
+[ 70444] set_configuration -> LIBUSB_SUCCESS / LIBUSB_TRANSFER_COMPLETED
+[ 70457] claim -> LIBUSB_SUCCESS / LIBUSB_TRANSFER_COMPLETED
+[ 71227] rx (32): 02 20 02 1c 00 11 22 33 44 55 00 00 37 35 04 10 01 00 02 00 49 02 02 00 02 0e 01 00 01 00 01 00 
+[ 71228] gip dock +770 hello 1: 3537:1004 firmware 1.2.585.2 hardware 2.14
+[ 71228] gip dock +770 bring-up 1 (hello)
+[ 71228] gip dock +770 tx start: 05 20 01 01 00 -> ok
+[ 71228] gip dock +770 tx led: 0a 20 02 03 00 01 14 -> ok
+[ 71228] gip dock +770 tx security-complete: 06 20 01 02 01 00 -> ok
+[ 71228] gip dock +770 tx rumble-stop: 09 00 01 09 00 0f 00 00 00 00 ff 00 eb -> ok
+[ 71228] gip dock +770 wait-hello -> wait-up (brought up)
+[ 71247] rx (8): 03 20 00 04 87 00 00 00 
+[ 71248] gip dock +790 status 87
+[ 71248] gip dock +790 wait-up -> active (status)
+[ 71258] rx (36): 20 00 01 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[ 71258] gip dock +801 input 1: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[ 71258]   INPUT buttons=00000000 lx=128 ly=127 rx=128 ry=127 lt=0 rt=0
+[ 72597] rx status 1
+[ 72597] RESULT plain: DEVICE GONE after 2156 ms, frames 3, state active, hellos 1, statuses 1, inputs 1

@@ -1,0 +1,1800 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (disconnected)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (đã ngắt kết nối)"
+          }
+        }
+      }
+    },
+    "%@: this controller has no such button" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: tay cầm không có nút này"
+          }
+        }
+      }
+    },
+    "%lld intervals · %lld pauses over %lld ms (left out). Median and p99 use 0.01 ms bins (below 20 ms) and 1 ms bins (above 20 ms)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld khoảng cách · %2$lld khoảng nghỉ trên %3$lld ms (không tính). Trung vị và p99 lấy theo ô 0,01 ms (dưới 20 ms), 1 ms (trên 20 ms)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@intervals@ · %#@pauses@ over %3$lld ms (left out). Median and p99 use 0.01 ms bins (below 20 ms) and 1 ms bins (above 20 ms)."
+          },
+          "substitutions" : {
+            "intervals" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg interval"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg intervals"
+                    }
+                  }
+                }
+              }
+            },
+            "pauses" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg pause"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg pauses"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld reports · %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld báo cáo · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@reports@ · %2$@"
+          },
+          "substitutions" : {
+            "reports" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg report"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reports"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "1000 / mean interval" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1000 / khoảng cách trung bình"
+          }
+        }
+      }
+    },
+    "A GIP controller (through a dock / 2.4 GHz receiver, or by cable in GIP mode) sends reports only when its state changes; a silence longer than %lld ms counts as a \"pause\" and is left out of the intervals between reports." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm GIP (qua dock / bộ thu 2.4G, hoặc cáp ở chế độ GIP) chỉ gửi báo cáo khi trạng thái thay đổi; khoảng lặng trên %lld ms được tính là \"khoảng nghỉ\", không tính vào khoảng cách giữa các báo cáo."
+          }
+        }
+      }
+    },
+    "A device tagged **XPadMac** is the Xbox controller the driver creates: the measured number is the rate games get after the driver. An untagged device (a controller XPadMac does not drive) gives its own raw rate." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị có nhãn **XPadMac** là tay cầm Xbox driver tạo ra: con số đo được là tần số tới game sau driver. Thiết bị không có nhãn (tay cầm mà XPadMac không điều khiển) cho tần số thô của chính nó."
+          }
+        }
+      }
+    },
+    "Administrator rights are needed for this action." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần quyền quản trị viên để thực hiện thao tác này."
+          }
+        }
+      }
+    },
+    "All" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tất cả"
+          }
+        }
+      }
+    },
+    "An early Xbox One controller that macOS does not support on its own; the XPadMac driver will take it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm Xbox One đời đầu mà macOS không hỗ trợ sẵn; driver XPadMac sẽ nhận nó."
+          }
+        }
+      }
+    },
+    "Another app has exclusive access to this device (kIOReturnExclusiveAccess). Quit that app and try again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một ứng dụng khác đang giữ riêng thiết bị này (kIOReturnExclusiveAccess). Đóng ứng dụng đó rồi thử lại."
+          }
+        }
+      }
+    },
+    "App location" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vị trí ứng dụng"
+          }
+        }
+      }
+    },
+    "Average" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trung bình"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy"
+          }
+        }
+      }
+    },
+    "Category" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loại"
+          }
+        }
+      }
+    },
+    "Checking…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang kiểm tra…"
+          }
+        }
+      }
+    },
+    "Choose a controller in the list." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hãy chọn một tay cầm trong danh sách."
+          }
+        }
+      }
+    },
+    "Click \"Start\", then **keep moving both analog sticks** for a few seconds. A controller left alone may send nothing, so the number will be low or zero." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bấm \"Bắt đầu đo\" rồi **xoay liên tục cả hai cần analog** trong vài giây. Tay cầm để yên thì có thể không gửi gì, con số sẽ thấp hoặc bằng 0."
+          }
+        }
+      }
+    },
+    "Clock" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng hồ"
+          }
+        }
+      }
+    },
+    "Controllers" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm"
+          }
+        }
+      }
+    },
+    "Copy XPadMac.app to the /Applications folder and open the app from there." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chép XPadMac.app vào thư mục /Applications và mở ứng dụng từ đó."
+          }
+        }
+      }
+    },
+    "Could not connect to the controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tạo được kết nối tới tay cầm."
+          }
+        }
+      }
+    },
+    "Could not open the controller to measure it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không mở được tay cầm để đo."
+          }
+        }
+      }
+    },
+    "Could not read the state" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được trạng thái"
+          }
+        }
+      }
+    },
+    "Current (1 second)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện tại (1 giây)"
+          }
+        }
+      }
+    },
+    "Declared" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khai báo"
+          }
+        }
+      }
+    },
+    "Devices" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị"
+          }
+        }
+      }
+    },
+    "Driver" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trình điều khiển"
+          }
+        }
+      }
+    },
+    "Driver identifier" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mã driver"
+          }
+        }
+      }
+    },
+    "Driver version %@ is already installed, so macOS keeps the running copy and does not replace it. If you just changed the driver, rebuild it with make build (every build gets a new version number), run make install, then reinstall." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver phiên bản %@ đã được cài sẵn nên macOS giữ nguyên bản đang chạy, không thay. Nếu bạn vừa sửa driver, hãy build lại bằng make build (mỗi lần build có số phiên bản mới), chạy make install rồi bấm cài lại."
+          }
+        }
+      }
+    },
+    "Drivers" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver"
+          }
+        }
+      }
+    },
+    "Error: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lỗi: %@"
+          }
+        }
+      }
+    },
+    "Extended gamepad" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gamepad mở rộng (extended)"
+          }
+        }
+      }
+    },
+    "GIP (Xbox) mode: macOS has no driver for this controller, so it is not configured yet. The XPadMac driver will take it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ GIP (Xbox): macOS không có driver cho tay cầm này nên nó chưa được cấu hình. Driver XPadMac sẽ nhận nó."
+          }
+        }
+      }
+    },
+    "GIP (Xbox) mode: the device is configured but no driver has taken it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ GIP (Xbox): thiết bị đã được cấu hình nhưng chưa có driver nào nhận."
+          }
+        }
+      }
+    },
+    "GameController reports no rumble support for this controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GameController không báo khả năng rung cho tay cầm này."
+          }
+        }
+      }
+    },
+    "HID device" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị HID"
+          }
+        }
+      }
+    },
+    "HID device %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị HID %@"
+          }
+        }
+      }
+    },
+    "How to Install" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cách cài đặt"
+          }
+        }
+      }
+    },
+    "How to Measure" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cách đo cho đúng"
+          }
+        }
+      }
+    },
+    "Hz" : {
+      "shouldTranslate" : false
+    },
+    "Hz over time (last 30 seconds)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hz theo thời gian (30 giây gần nhất)"
+          }
+        }
+      }
+    },
+    "IOHIDDeviceCreate failed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IOHIDDeviceCreate thất bại."
+          }
+        }
+      }
+    },
+    "IORegistry tree (%lld entries)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cây IORegistry (%lld mục)"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "IORegistry tree (%lld entry)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "IORegistry tree (%lld entries)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Input reports per second that a HID device sends to macOS. For a device tagged XPadMac this is the rate after the driver: exactly what games and GameController receive. An untagged device shows the raw rate, before the driver (or a controller that does not go through XPadMac)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Số báo cáo đầu vào (input report) mỗi giây mà một thiết bị HID gửi tới macOS. Với thiết bị có nhãn XPadMac, đây là tần số sau driver: đúng con số game và GameController nhận được. Thiết bị không có nhãn là tần số thô, trước driver (hoặc tay cầm không qua XPadMac)."
+          }
+        }
+      }
+    },
+    "Install Driver" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt driver"
+          }
+        }
+      }
+    },
+    "Install the driver in this app on this Mac, or replace the installed one with it" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài driver trong ứng dụng này lên máy, hoặc thay bản đang cài bằng nó"
+          }
+        }
+      }
+    },
+    "Installed and running" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã cài đặt và đang chạy"
+          }
+        }
+      }
+    },
+    "Installed but turned off" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã cài đặt nhưng đang tắt"
+          }
+        }
+      }
+    },
+    "Intervals between reports" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khoảng cách giữa các báo cáo"
+          }
+        }
+      }
+    },
+    "Jitter" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Độ lệch (jitter)"
+          }
+        }
+      }
+    },
+    "Left motor" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor trái"
+          }
+        }
+      }
+    },
+    "Left trigger" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cò trái"
+          }
+        }
+      }
+    },
+    "Location (locationID)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vị trí (locationID)"
+          }
+        }
+      }
+    },
+    "Manufacturer" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhà sản xuất"
+          }
+        }
+      }
+    },
+    "Max" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lớn nhất"
+          }
+        }
+      }
+    },
+    "Mean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trung bình"
+          }
+        }
+      }
+    },
+    "Measuring… keep moving both analog sticks." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang đo… xoay liên tục cả hai cần analog."
+          }
+        }
+      }
+    },
+    "Median" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trung vị"
+          }
+        }
+      }
+    },
+    "Micro gamepad" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gamepad thu gọn (micro)"
+          }
+        }
+      }
+    },
+    "Min" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhỏ nhất"
+          }
+        }
+      }
+    },
+    "No Controllers" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa thấy tay cầm nào"
+          }
+        }
+      }
+    },
+    "No HID gamepad or joystick found. Plug in or connect a controller; the list updates on its own." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thấy gamepad / joystick HID nào. Cắm hoặc kết nối tay cầm; danh sách tự cập nhật."
+          }
+        }
+      }
+    },
+    "No Matching Devices" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có thiết bị phù hợp"
+          }
+        }
+      }
+    },
+    "No Xbox controller found on USB. Connect a controller by cable or through a dock / receiver, then click \"Refresh\"." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thấy tay cầm Xbox nào trên USB. Cắm tay cầm bằng cáp hoặc qua dock / bộ thu rồi bấm \"Làm mới\"."
+          }
+        }
+      }
+    },
+    "No driver has taken this device." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có driver nào nhận thiết bị này."
+          }
+        }
+      }
+    },
+    "No gamepad profile" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có hồ sơ gamepad"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có"
+          }
+        }
+      }
+    },
+    "Not configured" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa được cấu hình"
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa cài đặt"
+          }
+        }
+      }
+    },
+    "Open Applications Folder" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở thư mục Applications"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở Cài đặt hệ thống"
+          }
+        }
+      }
+    },
+    "Open System Settings › General › Login Items & Extensions › Driver Extensions and turn on XPadMac." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở Cài đặt hệ thống › Cài đặt chung › Mục đăng nhập & tiện ích mở rộng › Tiện ích mở rộng driver và bật XPadMac."
+          }
+        }
+      }
+    },
+    "Opened by" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang được mở bởi"
+          }
+        }
+      }
+    },
+    "Peak" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cao nhất"
+          }
+        }
+      }
+    },
+    "Plug in a controller. If it still does not show up, open \"USB Diagnostics\" to see which driver has the device." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cắm tay cầm vào máy. Nếu nó vẫn không hiện ra, xem mục \"Chẩn đoán USB\" để biết driver nào đang nhận thiết bị."
+          }
+        }
+      }
+    },
+    "Polling Rate" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tần số báo cáo"
+          }
+        }
+      }
+    },
+    "Preparing the list of HID devices…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chuẩn bị danh sách thiết bị HID…"
+          }
+        }
+      }
+    },
+    "Profile" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hồ sơ"
+          }
+        }
+      }
+    },
+    "Read the driver's state from macOS again" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc lại trạng thái driver từ macOS"
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Làm mới"
+          }
+        }
+      }
+    },
+    "Refreshes on its own when a USB device is plugged in or removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tự làm mới khi cắm / rút thiết bị USB."
+          }
+        }
+      }
+    },
+    "Reinstall / Update Driver" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài lại / cập nhật driver"
+          }
+        }
+      }
+    },
+    "Report ID" : {
+      "shouldTranslate" : false
+    },
+    "Reset" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đặt lại"
+          }
+        }
+      }
+    },
+    "Restart your Mac to finish the driver change." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần khởi động lại máy để hoàn tất thay đổi driver."
+          }
+        }
+      }
+    },
+    "Right motor" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor phải"
+          }
+        }
+      }
+    },
+    "Right trigger" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cò phải"
+          }
+        }
+      }
+    },
+    "Rumbles the left motor, right motor, left trigger, right trigger, then all of them, 1 second each" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rung lần lượt motor trái, motor phải, cò trái, cò phải rồi tất cả, mỗi lượt 1 giây"
+          }
+        }
+      }
+    },
+    "Rumbling: %@ (%lld/%lld)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang rung: %1$@ (%2$lld/%3$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rumbling: %1$@ (%2$lld/%3$lld)"
+          }
+        }
+      }
+    },
+    "Scanning the IORegistry…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang quét IORegistry…"
+          }
+        }
+      }
+    },
+    "Sending the request to turn off (remove) the driver…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gửi yêu cầu tắt (gỡ) driver…"
+          }
+        }
+      }
+    },
+    "Sending the request to turn on (install) the driver…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gửi yêu cầu bật (cài đặt) driver…"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện trong Finder"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bắt đầu đo"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trạng thái"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dừng"
+          }
+        }
+      }
+    },
+    "System extension error (code %lld): %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lỗi system extension (mã %1$lld): %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System extension error (code %1$lld): %2$@"
+          }
+        }
+      }
+    },
+    "System policy (MDM or security settings) does not allow this driver." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chính sách hệ thống (MDM hoặc cấu hình bảo mật) không cho phép driver này."
+          }
+        }
+      }
+    },
+    "Technical Details" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông tin kỹ thuật"
+          }
+        }
+      }
+    },
+    "Test Rumble" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thử rung"
+          }
+        }
+      }
+    },
+    "The XPadMac driver is driving this device and presents it to macOS as an Xbox Wireless Controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver XPadMac đang điều khiển thiết bị này và trình bày nó với macOS như Xbox Wireless Controller."
+          }
+        }
+      }
+    },
+    "The XPadMac driver is off. Switch to turn it on." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver XPadMac đang tắt. Gạt để bật."
+          }
+        }
+      }
+    },
+    "The XPadMac driver is on. Switch to turn it off." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver XPadMac đang bật. Gạt để tắt."
+          }
+        }
+      }
+    },
+    "The XPadMac driver makes Xbox One (GIP) and Xbox 360 (XInput) controllers that macOS ignores show up as an Xbox Wireless Controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver XPadMac làm tay cầm Xbox One (GIP) và Xbox 360 (XInput) mà macOS bỏ qua hiện ra như một Xbox Wireless Controller."
+          }
+        }
+      }
+    },
+    "The app bundle contains several drivers with the same bundle identifier." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có nhiều driver trùng bundle identifier trong gói ứng dụng."
+          }
+        }
+      }
+    },
+    "The app is not in /Applications" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng chưa nằm trong /Applications"
+          }
+        }
+      }
+    },
+    "The app lacks the entitlement to install a system extension. This build is not signed with an Apple Developer account." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng thiếu quyền cài system extension. Bản build này chưa được ký bằng tài khoản Apple Developer."
+          }
+        }
+      }
+    },
+    "The controller being measured has disconnected. Measuring stopped; the final results are still shown below." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm đang đo đã bị ngắt kết nối. Đã dừng đo; kết quả cuối cùng vẫn hiện bên dưới."
+          }
+        }
+      }
+    },
+    "The controllers GameController (the macOS game framework) sees. While the driver works, an Xbox One (GIP) or Xbox 360 (XInput) controller shows up here as an Xbox Wireless Controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Những tay cầm mà GameController (framework game của macOS) đang thấy. Khi driver hoạt động, tay cầm Xbox One (GIP) hay Xbox 360 (XInput) hiện ra ở đây là Xbox Wireless Controller."
+          }
+        }
+      }
+    },
+    "The driver in the app bundle has no bundle identifier." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver trong gói ứng dụng thiếu bundle identifier."
+          }
+        }
+      }
+    },
+    "The driver is installed but turned off in System Settings, and macOS lets you turn it back on only there: General › Login Items & Extensions › Driver Extensions › XPadMac." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver đã cài nhưng đang bị tắt trong Cài đặt hệ thống, và macOS chỉ cho bật lại ở đó: Cài đặt chung › Mục đăng nhập & tiện ích mở rộng › Tiện ích mở rộng driver › XPadMac."
+          }
+        }
+      }
+    },
+    "The driver is off. Unplug and replug the controller so macOS takes it back the default way." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã tắt driver. Rút ra và cắm lại tay cầm để macOS nhận lại nó theo cách mặc định."
+          }
+        }
+      }
+    },
+    "The driver is on. Unplug and replug the controller (or the dock)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã bật driver. Hãy rút ra và cắm lại tay cầm (hoặc dock)."
+          }
+        }
+      }
+    },
+    "The driver is removed for good after you restart your Mac." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver sẽ được gỡ hẳn sau khi khởi động lại máy."
+          }
+        }
+      }
+    },
+    "The driver starts working after you restart your Mac." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver sẽ hoạt động sau khi bạn khởi động lại máy."
+          }
+        }
+      }
+    },
+    "The driver turns off for good after you restart your Mac, because it is still driving a device. Next time, unplug the dock or controller before turning it off and no restart is needed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driver sẽ tắt hẳn sau khi bạn khởi động lại máy, vì nó còn đang điều khiển một thiết bị. Lần sau, rút dock hoặc tay cầm ra trước khi tắt thì không cần khởi động lại."
+          }
+        }
+      }
+    },
+    "The driver was not found in the app bundle (Contents/Library/SystemExtensions)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy driver trong gói ứng dụng (Contents/Library/SystemExtensions)."
+          }
+        }
+      }
+    },
+    "The driver's code signature is invalid. It must be signed with an Apple Development certificate and a profile that includes this Mac's UDID." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chữ ký mã của driver không hợp lệ. Cần ký bằng chứng chỉ Apple Development với profile có UDID của máy này."
+          }
+        }
+      }
+    },
+    "The measured number is the rate reaching macOS, not the highest rate the controller supports. The device is opened shared (not seized), so games keep using the controller normally while you measure." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con số đo được là tần số tới macOS, không phải tần số tối đa tay cầm hỗ trợ. Thiết bị được mở chung (không chiếm riêng), game vẫn dùng tay cầm bình thường trong lúc đo."
+          }
+        }
+      }
+    },
+    "The request was canceled." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yêu cầu đã bị hủy."
+          }
+        }
+      }
+    },
+    "The request was replaced by a newer one." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yêu cầu đã được thay bằng một yêu cầu mới hơn."
+          }
+        }
+      }
+    },
+    "This controller does not support rumble through GameController." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm này không hỗ trợ rung qua GameController."
+          }
+        }
+      }
+    },
+    "This controller has disconnected. Plug it back in or choose another controller in the list." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm này đã ngắt kết nối. Cắm lại hoặc chọn một tay cầm khác trong danh sách."
+          }
+        }
+      }
+    },
+    "This controller has disconnected. These are the final results of the measurement; click \"Reset\" or choose another device to measure again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm này đã ngắt kết nối. Đây là kết quả cuối cùng của lần đo; bấm \"Đặt lại\" hoặc chọn thiết bị khác để đo tiếp."
+          }
+        }
+      }
+    },
+    "This controller has no extended gamepad profile, so there is no live view." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm này không có hồ sơ extended gamepad nên không xem trực tiếp được."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thời gian"
+          }
+        }
+      }
+    },
+    "To turn it off at once without restarting, unplug the dock or controller first: macOS can remove the driver only while no device is using it.\n\nThe controller goes back to how macOS handles it on its own and no longer shows up as an Xbox Wireless Controller. Turn it back on at any time (macOS may ask for approval again)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để tắt ngay mà không phải khởi động lại máy, hãy rút dock hoặc tay cầm ra trước: macOS chỉ gỡ được driver khi không thiết bị nào đang dùng nó.\n\nTay cầm sẽ trở về cách macOS tự xử lý và không còn hiện ra như Xbox Wireless Controller. Bật lại bất cứ lúc nào (macOS có thể hỏi cho phép lại)."
+          }
+        }
+      }
+    },
+    "Transport" : {
+      "shouldTranslate" : false
+    },
+    "Turn Off Driver" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt driver"
+          }
+        }
+      }
+    },
+    "Turn off the XPadMac driver?" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt driver XPadMac?"
+          }
+        }
+      }
+    },
+    "Turn on the driver switch (or click \"Install Driver\")." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bật công tắc driver (hoặc bấm \"Cài đặt driver\")."
+          }
+        }
+      }
+    },
+    "Turn on the switch on the right (or click \"Install Driver\") to get started." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bật công tắc bên phải (hoặc bấm \"Cài đặt driver\") để bắt đầu."
+          }
+        }
+      }
+    },
+    "Turning off…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang tắt…"
+          }
+        }
+      }
+    },
+    "Turning on…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang bật…"
+          }
+        }
+      }
+    },
+    "USB Diagnostics" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chẩn đoán USB"
+          }
+        }
+      }
+    },
+    "USB configuration" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cấu hình USB"
+          }
+        }
+      }
+    },
+    "USB device" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị USB"
+          }
+        }
+      }
+    },
+    "Uninstalling" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gỡ cài đặt"
+          }
+        }
+      }
+    },
+    "Unnamed controller" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm không tên"
+          }
+        }
+      }
+    },
+    "Unplug and replug the controller, then open \"Controllers\": it should be listed as an Xbox Wireless Controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rút ra và cắm lại tay cầm, rồi xem mục \"Tay cầm\": tay cầm phải hiện là Xbox Wireless Controller."
+          }
+        }
+      }
+    },
+    "Updated at %@." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cập nhật lúc %@."
+          }
+        }
+      }
+    },
+    "VID:PID" : {
+      "shouldTranslate" : false
+    },
+    "Version %@. Plug in a controller and it is ready to use." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phiên bản %@. Cắm tay cầm vào là dùng được."
+          }
+        }
+      }
+    },
+    "Version %@. Turn XPadMac back on in System Settings › Login Items & Extensions." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phiên bản %@. Bật lại XPadMac trong Cài đặt hệ thống › Mục đăng nhập & tiện ích mở rộng."
+          }
+        }
+      }
+    },
+    "Version in this app" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phiên bản trong ứng dụng"
+          }
+        }
+      }
+    },
+    "Waiting for your approval" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chờ bạn cho phép"
+          }
+        }
+      }
+    },
+    "When macOS asks, click \"Open System Settings\", go to General › Login Items & Extensions › Driver Extensions and turn on XPadMac (an administrator password is needed)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khi macOS hỏi, bấm \"Mở Cài đặt hệ thống\": vào Cài đặt chung › Mục đăng nhập & tiện ích mở rộng › Tiện ích mở rộng driver và bật XPadMac (cần mật khẩu quản trị)."
+          }
+        }
+      }
+    },
+    "XPadMac" : {
+      "shouldTranslate" : false
+    },
+    "XPadMac must be in the /Applications folder before macOS installs the driver." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XPadMac phải nằm trong thư mục /Applications thì macOS mới cho cài driver."
+          }
+        }
+      }
+    },
+    "XPadSource" : {
+      "shouldTranslate" : false
+    },
+    "Xbox 360 (XInput) controller: XPadMac declares the ReportInterval of the controller's endpoint (the \"Declared\" tile). Measure to find the real rate." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm Xbox 360 (XInput): XPadMac khai báo ReportInterval theo endpoint của tay cầm (ô \"Khai báo\"). Đo để biết tần số thật."
+          }
+        }
+      }
+    },
+    "Xbox 360 (XInput): macOS has no driver for the FF/5D/01 interface. Install the XPadMac driver (XPad360Gamepad), then unplug and replug the controller so it shows up as an Xbox Wireless Controller." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xbox 360 (XInput): macOS không có driver cho giao diện FF/5D/01. Cài driver XPadMac (XPad360Gamepad) rồi rút ra cắm lại để nó hiện ra như Xbox Wireless Controller."
+          }
+        }
+      }
+    },
+    "Xbox controllers on USB (GIP and XInput, from Microsoft and the vendors XPadMac supports), and the drivers attached to each device." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tay cầm Xbox qua USB (GIP và XInput, của Microsoft và các hãng XPadMac hỗ trợ), cùng driver đang gắn vào từng thiết bị."
+          }
+        }
+      }
+    },
+    "could not create a haptic engine." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "không tạo được haptic engine."
+          }
+        }
+      }
+    },
+    "declared %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "khai báo %@"
+          }
+        }
+      }
+    },
+    "driver" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "driver"
+          }
+        }
+      }
+    },
+    "highest 1-second window" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cửa sổ 1 giây cao nhất"
+          }
+        }
+      }
+    },
+    "macOS does not let XPadMac open this device (kIOReturnNotPermitted). A controller normally needs no permission, but a device that also declares a keyboard or mouse needs Input Monitoring: go to System Settings › Privacy & Security › Input Monitoring, turn on XPadMac, then reopen the app." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS không cho XPadMac mở thiết bị này (kIOReturnNotPermitted). Tay cầm thường không cần quyền gì, nhưng thiết bị khai báo thêm bàn phím hoặc chuột thì cần quyền Theo dõi đầu vào (Input Monitoring): vào Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Theo dõi đầu vào, bật XPadMac rồi mở lại ứng dụng."
+          }
+        }
+      }
+    },
+    "macOS does not recognize this kind of system extension." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS không nhận ra loại system extension này."
+          }
+        }
+      }
+    },
+    "macOS installs the driver only when XPadMac.app is in the /Applications folder. Copy the app there, then open it again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS chỉ cho cài driver khi XPadMac.app nằm trong thư mục /Applications. Hãy chép ứng dụng vào đó rồi mở lại."
+          }
+        }
+      }
+    },
+    "macOS is running XPadMac from a temporary copy (App Translocation). Drag XPadMac.app into the Applications folder in Finder, then open it from there." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS đang chạy XPadMac từ một bản sao tạm (App Translocation). Hãy kéo XPadMac.app vào thư mục Applications bằng Finder rồi mở lại từ đó."
+          }
+        }
+      }
+    },
+    "macOS needs your approval for the driver. Click \"Open System Settings\", go to Login Items & Extensions › Driver Extensions and turn on XPadMac." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS cần bạn cho phép driver. Bấm \"Mở Cài đặt hệ thống\", vào Mục đăng nhập & tiện ích mở rộng › Tiện ích mở rộng driver và bật XPadMac."
+          }
+        }
+      }
+    },
+    "macOS rejected the driver during validation (signature, entitlements or Info.plist)." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS từ chối driver khi kiểm tra (chữ ký, entitlement hoặc Info.plist)."
+          }
+        }
+      }
+    },
+    "macOS reported an unknown error while handling the driver." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS báo lỗi không xác định khi xử lý driver."
+          }
+        }
+      }
+    },
+    "macOS supports this Xbox controller on its own; XPadMac leaves it alone." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS hỗ trợ sẵn tay cầm Xbox này; XPadMac không can thiệp."
+          }
+        }
+      }
+    },
+    "no ReportInterval" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "không có ReportInterval"
+          }
+        }
+      }
+    },
+    "no stick click" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "không có nút bấm cần"
+          }
+        }
+      }
+    },
+    "seconds" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "giây"
+          }
+        }
+      }
+    },
+    "some reports had no IOKit timestamp; mach_absolute_time() at arrival was used" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "một số báo cáo không có dấu thời gian IOKit; dùng mach_absolute_time() lúc nhận"
+          }
+        }
+      }
+    },
+    "source: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nguồn: %@"
+          }
+        }
+      }
+    },
+    "unreadable" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "không đọc được"
+          }
+        }
+      }
+    },
+    "— (not through XPadMac)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— (không qua XPadMac)"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

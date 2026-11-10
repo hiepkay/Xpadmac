@@ -1,0 +1,78 @@
+/* Xbox One and Series controllers over USB: the host's side of the Gaming
+ * Input Protocol (MS-GIPUSB), as Linux's xpad and xone and SDL speak it.
+ *
+ * A frame is: command, flags, sequence number, then the payload's length as
+ * a varint (7 bits a byte, bit 7 meaning more), and for a chunked frame a
+ * second varint (the total on the first chunk, the offset on the others).
+ * Flags: 0x0F client, 0x10 acknowledgement asked, 0x20 system message,
+ * 0x40 first chunk, 0x80 chunked. One USB transfer may hold several frames.
+ *
+ * Bringing a pad up: it announces itself with a Hello (0x02) every 500 ms
+ * until the host answers with START (0x05 power on), then the Guide LED
+ * (0x0A), "security complete" (0x06) and a rumble stop (0x09); then it sends
+ * its status (0x03) and input (0x20). A pad that is not brought up properly
+ * may give up: some third-party pads switch to another USB identity after a
+ * few seconds. GameSir receivers say nothing until their controller is
+ * linked (its Xbox button pressed), so for them the host only waits.
+ *
+ * Pure: it builds and reads the bytes, the caller moves them (usb_pad.c, on
+ * the pad's reader thread). */
+#ifndef PH_GIP_H
+#define PH_GIP_H
+
+#include "pad.h"
+
+#include <stdint.h>
+
+enum { GIP_WAIT_HELLO, GIP_WAIT_UP, GIP_ACTIVE, GIP_SILENT };
+
+/* Options, from /data/anypad/gip.txt (usb_pad.c reads it). */
+#define GIP_OPT_EE        1     /* ask the Microsoft OS string, as Windows does (off: Linux does not) */
+#define GIP_OPT_BLIND     2     /* bring the pad up without waiting for its Hello */
+#define GIP_OPT_KEEPALIVE 4     /* resend START, LED and security every 20 s while up */
+
+/* gip_receive's result. */
+#define GIP_RX_STATE 1          /* *st changed: feed it */
+#define GIP_RX_INPUT 2          /* the pad sent input or its Guide button */
+
+/* Sends p[0..len) to the pad; returns 1 if it went. */
+typedef int (*gip_send_fn)(void *ctx, const uint8_t *p, int len);
+
+typedef struct {
+    const char *name;           /* for the log ("usb:0.3") */
+    uint16_t vid, pid;
+    int opts;
+    int state;
+    uint8_t seq_sys, seq_sec, seq_vend;         /* 05/0A/04, 06, 09/4D: never 0 */
+    long t_open, t_state, t_burst, t_keep, t_rumble, t_rx;
+    int reads;                  /* reads issued by the caller: no write before the first */
+    int bursts;                 /* in the current bring-up */
+    int hint;                   /* the "press the Xbox button" hint was logged */
+    long chunk_total;           /* of the chunked transfer under way */
+    uint8_t status;             /* the last status byte */
+    unsigned long hellos, statuses, inputs, acks, frames, other, modules;
+} gip_t;
+
+void gip_init(gip_t *g, const char *name, uint16_t vid, uint16_t pid, int opts, long now);
+
+/* One USB transfer from the pad: every frame in it. Acknowledges what asks
+ * for it, moves the bring-up on, and updates *st from input and the Guide
+ * button (and to rest when the pad announces itself again). */
+int  gip_receive(gip_t *g, const uint8_t *buf, int len, long now, pad_state *st,
+                 gip_send_fn send, void *ctx);
+
+/* Timers, on every pass of the reader. */
+void gip_tick(gip_t *g, long now, gip_send_fn send, void *ctx);
+
+/* Up: it gives input, and takes rumble. */
+int  gip_up(const gip_t *g);
+
+/* A rumble frame for *o (motors 0..255), with the next sequence number. */
+int  gip_rumble(gip_t *g, const pad_output *o, long now, uint8_t *b, int max);
+
+const char *gip_state_name(int state);
+
+/* The pad went: what it did, for the log. */
+void gip_lost(const gip_t *g, long now);
+
+#endif

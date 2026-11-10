@@ -1,0 +1,52 @@
+// XPadMac build configuration, shared by the app and the driver extension.
+//
+// Do not put your own team or bundle ID prefix here: put them in
+// Config.local.xcconfig next to this file (git-ignored, included below),
+//   DEVELOPMENT_TEAM = ABCDE12345
+//   BUNDLE_ID_PREFIX = com.yourname.
+// or pass them to make (make build TEAM=ABCDE12345 PREFIX=com.yourname.), or
+// to xcodebuild (DEVELOPMENT_TEAM=... BUNDLE_ID_PREFIX=...).
+//
+// DEVELOPMENT_TEAM: your paid Apple Developer team's Team ID
+// (developer.apple.com/account > Membership details). Empty here: an
+// unsigned build (make build-unsigned) needs none; `make build` refuses to
+// start without one.
+//
+// BUNDLE_ID_PREFIX: ends with a dot. Bundle IDs: app $(BUNDLE_ID_PREFIX)xpadmac,
+// dext $(BUNDLE_ID_PREFIX)xpadmac.driver. An App ID belongs to one team, so
+// pick a prefix of your own (a reverse domain you control) for a signed build;
+// com.example. is a placeholder that is only good for unsigned builds.
+
+DEVELOPMENT_TEAM =
+BUNDLE_ID_PREFIX = com.example.
+
+// The app's signing. Automatic by default. Xcode ties an automatic Mac App
+// Development profile to the Mac it builds on, by that Mac's device record
+// in the team; when the record is the Mac's Hardware UUID rather than its
+// Provisioning UDID (an Apple silicon Mac registered the old way), AMFI
+// rejects the app ("No matching profile found"), and the portal types a
+// Provisioning UDID registered afterwards as an iOS device ("iPod"), which
+// macOS profiles leave out. The dext is fine either way (a DriverKit
+// profile lists iOS-typed devices too). Two ways out for the app:
+//   make build APP_PROFILE="<macOS App Development profile listing the UDID>"
+//     manual signing for the app (xcodebuild downloads the profile by name);
+//   make build APP_DEVID_PROFILE="<Developer ID profile, installed>"
+//     a Developer ID profile lists no devices (it provisions all of them);
+//     Xcode will not embed a dext signed with another certificate, so the
+//     app is built as usual and its outer bundle re-signed afterwards
+//     (Tools/resign-app.py).
+XPAD_APP_SIGN_STYLE = Automatic
+XPAD_APP_PROFILE =
+
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+
+#include? "Config.local.xcconfig"
+
+// Written by the Makefile before each xcodebuild run, with the TEAM and
+// PREFIX that make resolved (this file, Config.local.xcconfig, or make's
+// command line). Passing them to xcodebuild on its command line instead
+// breaks the build when they differ from these files: Xcode then embeds the
+// dext under the name the xcconfig values give, not the one it built.
+// Removed by make clean.
+#include? "build/make.xcconfig"

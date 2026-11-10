@@ -1,0 +1,60 @@
+XPadMac
+Copyright (C) 2026 The XPadMac contributors
+
+XPadMac is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (see LICENSE). It is distributed WITHOUT ANY WARRANTY.
+
+Parts of XPadMac are derived from, or were written with reference to, the
+projects below. Their notices are kept in the files concerned.
+
+AnyPad PS5, by elmonomalvad0
+  https://codeberg.org/elmonomalva0/Any-Pad-ps5
+  License: GPL-3.0-or-later
+AnyPad PS4, a PS4 port of AnyPad PS5
+  https://github.com/Vld439/AnyPad-PS4
+  License: GPL-3.0-or-later
+  Shared/gip.c and Shared/gip.h are derived from a GIP module (src/gip.c and
+  src/gip.h: bring-up state machine, vendor quirks, acknowledgements, chunked
+  frames, module filtering) that an XPadMac contributor wrote on top of
+  AnyPad PS4 and never published in that project; it is released here, as
+  part of XPadMac, under GPL-3.0-or-later. The module is kept verbatim in
+  docs/research/anypad_gip.c.orig and anypad_gip.h.orig, with the AnyPad
+  src/pad.h it was written against (AnyPad PS4's, plus the contributor's
+  PAD_EXTRA buttons) in anypad_pad.h.orig. See docs/research/README.md.
+
+xone, Copyright (C) 2021-2023 Severin von Wnuck-Lipinski (and contributors)
+  https://github.com/medusalix/xone (maintained fork: https://github.com/dlundqvist/xone)
+  License: GPL-2.0-or-later
+  Shared/gip_auth.c and Shared/gip_auth.h (GIP authentication: the host side
+  of the v1 RSA and v2 ECDH handshakes, auth/auth.c), the PRF in
+  Shared/gip_crypto.c (auth/crypto.c), the chunked framing and acknowledgement
+  rules in Shared/gip.c (bus/protocol.c), the serial-number request, the
+  audio-interface reset done by Driver/XPadGIPAudio, and the authentication
+  model in Tests/gen_auth_vectors.py. Used under the "or later" option and
+  distributed under GPL-3.0-or-later.
+
+Linux xpad (drivers/input/joystick/xpad.c, the Linux kernel)
+  https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c
+  License: GPL-2.0-or-later
+  Reference for the GIP and Xbox 360 (XInput) input layouts, the Share
+  button position, the 360 init request and LED message, and the vendor list.
+
+SDL (Simple DirectMedia Layer), SDL_hidapi_xboxone.c and SDL_hidapi_xbox360.c
+  https://github.com/libsdl-org/SDL
+  License: Zlib
+  Reference for the GIP identification step and timings, firmware-dependent
+  input layouts, and vendor/product lists.
+
+xpadneo
+  https://github.com/atar-axis/xpadneo
+  License: GPL-3.0
+  Reference for the Xbox Wireless Controller's 283-byte Bluetooth LE
+  ("unified") HID report descriptor and the rumble output report format
+  (motor enable bits, duration, delay, loop count).
+
+Trademarks: Xbox, Xbox One, Xbox Series X|S and Xbox Wireless Controller are
+trademarks of Microsoft Corporation. Other product and company names are
+trademarks of their respective owners. XPadMac is not affiliated with,
+endorsed by, or certified by Microsoft or any controller vendor.
